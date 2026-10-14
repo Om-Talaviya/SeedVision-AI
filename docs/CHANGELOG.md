@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-10-15
+
+### Added
+- **Multi-Gate Provenance Verification Engine (`provenance_verifier.py`)**:
+  - Implemented 4-stage strict verification gate (`verify_evaluation_provenance`) requiring checkpoint training metadata, authentic dataset provenance record, physical image existence, and zero split leakage.
+  - Eliminated naive substring heuristics (`"real" in model_name`), guaranteeing that renamed synthetic checkpoints evaluate as `is_real_world_validated = False` and `evaluation_type = "unverified_evaluation"`.
+- **Safe In-Place Real Data Ingestion**:
+  - Enhanced `scripts/ingest_real_data.py` with automatic in-place mode detection (`source_dir == target_dir`), disabling file duplication while enforcing leakage-resistant splits and duplicate auditing.
+  - Added strict directory nesting checks preventing `splits_dir` or `target_dir` from being nested inside `source_dir`.
+  - Added hash collision protection preventing overwrite of modified destination images during staging.
+- **Automated Regression Suite Expansion (42 Tests)**:
+  - Added `test_renamed_synthetic_checkpoint_cannot_be_marked_real_world_validated` proving renamed synthetic models cannot be marked real-world validated.
+  - Added `test_in_place_ingestion_safety_and_nested_prevention` verifying in-place auditing and nested directory rejection.
+  - Added `test_compare_models_empty_and_populated` and `test_model_evaluator_complete_flow` (42/42 tests passing with 73% package coverage).
+- **Packaging & Dependency Harmonization**:
+  - Synchronized `pyproject.toml` dependencies with `requirements.txt` (added `scipy` and `pydantic`).
+  - Added `data/real_raw/**/*.jpg` and test outputs to `.gitignore` to prevent large binary dumps or temporary files from git tracking.
+
+---
+
 ## [1.3.0] - 2026-10-14
 
 ### Added

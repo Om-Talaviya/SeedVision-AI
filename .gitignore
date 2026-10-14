@@ -42,6 +42,12 @@ data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+data/real_raw/**/*.jpg
+data/real_raw/**/*.jpeg
+data/real_raw/**/*.png
+data/real_raw/**/*.webp
+data/real_raw/**/*.bmp
+data/provenance_real.json
 artifacts/checkpoints/*.pt
 artifacts/checkpoints/*.pth
 !artifacts/checkpoints/.gitkeep

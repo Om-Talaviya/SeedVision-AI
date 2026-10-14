@@ -253,7 +253,7 @@ SeedVision-AI/
 │   ├── data/                          # Ingestion, validation, splitting, transforms
 │   ├── models/                        # Custom CNN, MobileNetV2, Model Factory
 │   ├── training/                      # Trainer, Early Stopping, Checkpoints
-│   ├── evaluation/                    # Metrics, Calibration (ECE), Plots, Benchmarks
+│   ├── evaluation/                    # Metrics, Calibration (ECE), Provenance Verifier, Plots
 │   ├── explainability/                # Grad-CAM engine & overlay blending
 │   └── inference/                     # Predictor & Upload Validator
 ├── scripts/                           # Executable CLI Workflows
@@ -266,7 +266,7 @@ SeedVision-AI/
 │   ├── checkpoints/                   # Trained PyTorch .pt weights
 │   ├── metrics/                       # Evaluation JSONs & CSV summaries
 │   └── figures/                       # Confusion matrices, curves & overlays
-└── tests/                             # Automated Pytest Suite (38 unit tests)
+└── tests/                             # Automated Pytest Suite (42 unit tests)
 ```
 
 ---
