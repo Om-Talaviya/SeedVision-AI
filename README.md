@@ -274,6 +274,7 @@ SeedVision-AI/
 │   ├── METHODOLOGY.md                 # Mathematical formulation & Grad-CAM derivation
 │   ├── LIMITATIONS.md                 # Scientific boundary & non-viability disclosures
 │   ├── PRESENTATION_GUIDE.md          # Viva presentation guide & defense Q&A
+│   ├── DEMO_GUIDE.md                  # Academic viva & live demonstration guide
 │   ├── PROJECT_OVERVIEW.md            # Academic overview & system description
 │   ├── backend-schema.md              # Ingestion & split manifest schema
 │   ├── decisions.md                   # Architectural Decision Records (ADRs)

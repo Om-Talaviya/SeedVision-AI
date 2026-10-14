@@ -2,11 +2,17 @@
 
 import json
 from pathlib import Path
+import sys
 import tempfile
 import numpy as np
 import pandas as pd
 from PIL import Image
 import pytest
+
+# Ensure project root is in sys.path for scripts module import
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
 
 from scripts.ingest_real_data import (
     audit_and_ingest_real_dataset,

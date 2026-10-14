@@ -30,5 +30,8 @@ jobs:
           pip install -e .
 
       - name: Run automated test suite
+        env:
+          PYTHONPATH: .
         run: |
-          pytest tests/ --cov=seedvision --cov-report=term-missing
+          python -m pytest tests/ --cov=seedvision --cov-report=term-missing
+
