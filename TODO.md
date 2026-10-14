@@ -20,6 +20,15 @@
 - [x] Streamlit web application audit with research verification mode disclaimers and real-data ingestion protocol tab.
 - [x] Enriched evaluation artifacts (`artifacts/metrics/*.json`, `model_comparison_summary.csv`) with provenance and validation status.
 
+## 🌾 Real-World Dataset Acquisition & Ingestion Pipeline (Completed ✅)
+- [x] Exhaustive search of public pulse datasets (Mendeley `PulseLibrary`, GitHub `TRCS_8_SET`, `SOYPR`, Kaggle).
+- [x] Verification finding: public chickpea datasets categorize by species or variety, not by 4-class physical defect quality.
+- [x] Automated genuine seed photography ingestion pipeline in `scripts/ingest_real_data.py` (integrity checks, MD5 & aHash deduplication, leakage-resistant group splitting).
+- [x] Directory scaffold and annotation guide initialized under `data/real_raw/` with `annotations_template.csv`.
+- [x] Added `--splits-dir` and `--name-suffix` flags to `scripts/train.py` and `scripts/evaluate.py` for decoupled real-data training.
+- [x] 3 new unit tests in `tests/test_real_data_ingestion.py` (33/33 total tests passing).
+- [ ] User/Researcher upload of physical chickpea photos into `data/real_raw/` for final real-data benchmark execution.
+
 ---
 
 ## 🚀 Phase 2: Enhanced Computer Vision & Multi-Seed Processing (In Progress / Up Next)

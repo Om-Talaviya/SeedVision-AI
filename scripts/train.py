@@ -35,6 +35,18 @@ def main():
     parser.add_argument("--lr", type=float, default=None, help="Override learning rate.")
     parser.add_argument("--device", type=str, default=None, help="Device to use ('cpu', 'cuda', 'auto').")
     parser.add_argument(
+        "--splits-dir",
+        type=str,
+        default=None,
+        help="Path to directory containing train_manifest.csv and val_manifest.csv (e.g. data/processed/splits_real).",
+    )
+    parser.add_argument(
+        "--name-suffix",
+        type=str,
+        default=None,
+        help="Optional suffix to append to model name (e.g. 'Real' -> 'SeedNet-Baseline-Real').",
+    )
+    parser.add_argument(
         "--smoke-test",
         action="store_true",
         help="Run a 1-epoch quick smoke test to verify training pipeline.",
@@ -55,6 +67,9 @@ def main():
     elif args.model_type == "transfer":
         cfg.model.architecture = "mobilenet_v2"
         cfg.model.name = "MobileNetV2-Transfer"
+
+    if args.name_suffix:
+        cfg.model.name = f"{cfg.model.name}-{args.name_suffix}"
 
     if args.epochs is not None:
         cfg.training.epochs = args.epochs
@@ -79,13 +94,13 @@ def main():
     print(f"Classes:            {cfg.dataset.classes}")
 
     # Check for split manifests
-    splits_dir = Path(cfg.dataset.splits_dir)
+    splits_dir = Path(args.splits_dir) if args.splits_dir else Path(cfg.dataset.splits_dir)
     train_manifest = splits_dir / "train_manifest.csv"
     val_manifest = splits_dir / "val_manifest.csv"
 
     if not train_manifest.is_file() or not val_manifest.is_file():
         print(f"[ERROR] Split manifests not found in {splits_dir}.")
-        print("Please run `python scripts/prepare_dataset.py` first to generate splits.")
+        print("Please run `python scripts/prepare_dataset.py` or `python scripts/ingest_real_data.py` first to generate splits.")
         sys.exit(1)
 
     train_df = pd.read_csv(train_manifest)

@@ -155,29 +155,36 @@ pip install -e .
 
 ## 💻 Command-Line Workflow
 
-### Step 1: Prepare Dataset and Leakage-Resistant Splits
+### A. Software Verification Pipeline (Synthetic Calibration Fixtures)
 ```bash
-# Validates raw data, generates manifest, and creates 70/15/15 train/val/test splits
-# (If data/raw is empty, use --generate-fixtures to create verification sample data)
+# 1. Prepare synthetic verification fixtures & splits
 python scripts/prepare_dataset.py --generate-fixtures --samples-per-class 60
-```
 
-### Step 2: Train Deep Learning Models
-```bash
-# Train Model A: Baseline Custom CNN (SeedNet-Baseline)
+# 2. Train baseline CNN & MobileNetV2 on verification fixtures
 python scripts/train.py --config configs/cnn.yaml --epochs 15
-
-# Train Model B: Transfer Learning (MobileNetV2)
 python scripts/train.py --config configs/transfer_learning.yaml --epochs 15
+
+# 3. Evaluate checkpoints on synthetic test split
+python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_SeedNet-Baseline.pt
+python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_MobileNetV2-Transfer.pt
 ```
 
-### Step 3: Evaluate Trained Checkpoints on Held-Out Test Set
+### B. Genuine Agricultural Seed Photography Pipeline (Real Data)
 ```bash
-# Evaluate Custom CNN
-python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_SeedNet-Baseline.pt
+# 1. Scaffold directory structure & annotation guide for genuine photos
+python scripts/ingest_real_data.py --init-structure
 
-# Evaluate MobileNetV2
-python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_MobileNetV2-Transfer.pt
+# 2. Ingest, deduplicate, and create leakage-resistant splits from real photos
+# (Place images in data/real_raw/<class_name>/ before running)
+python scripts/ingest_real_data.py --source-dir data/real_raw --splits-dir data/processed/splits_real --provenance-source "Trial Farm"
+
+# 3. Train models on genuine training data
+python scripts/train.py --config configs/cnn.yaml --splits-dir data/processed/splits_real --name-suffix Real
+python scripts/train.py --config configs/transfer_learning.yaml --splits-dir data/processed/splits_real --name-suffix Real
+
+# 4. Evaluate models on untouched real-data test split
+python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_SeedNet-Baseline-Real.pt --splits-dir data/processed/splits_real
+python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_MobileNetV2-Transfer-Real.pt --splits-dir data/processed/splits_real
 ```
 
 ### Step 4: Run Single-Image Inference with Grad-CAM

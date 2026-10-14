@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-10-14
+
+### Added
+- **Public Pulse Dataset Due Diligence**:
+  - Investigated publicly available chickpea and pulse datasets across Mendeley Data (`PulseLibrary` DOI `10.17632/kw7x5xyprh.1`, `Cicer Arietinum Germination`), GitHub (`TRCS_8_SET`, `SOYPR`), and Kaggle (`Fusarium Wilt`).
+  - Documented forensic finding: public repositories classify by pulse species or botanical variety, but no ready-to-use dataset exists pre-annotated with the 4 physical defect classes.
+- **Genuine Seed Photography Ingestion Engine (`scripts/ingest_real_data.py`)**:
+  - Implemented automated ingestion CLI supporting image integrity validation, perceptual average hashing (aHash), cryptographic MD5 duplicate purging, and group-aware leakage-resistant splitting.
+  - Implemented `--init-structure` scaffolding generating `data/real_raw/` with class directories, annotation template CSV, and laboratory capture guidelines.
+  - Generates `data/provenance_real.json` recording source metadata, license, and class balance.
+- **Training & Evaluation Flexibility**:
+  - Added `--splits-dir` argument to both `scripts/train.py` and `scripts/evaluate.py`, enabling immediate training and evaluation on genuine pulse splits (`data/processed/splits_real/`) without editing configuration files.
+  - Added `--name-suffix` argument to `scripts/train.py` for tagging real-data model checkpoints (e.g. `SeedNet-Baseline-Real`).
+- **Automated Ingestion Test Suite**:
+  - Created `tests/test_real_data_ingestion.py` covering directory scaffolding, perceptual hash consistency, and duplicate purging (33/33 tests passing).
+
+---
+
 ## [1.1.0] - 2026-10-14
 
 ### Added

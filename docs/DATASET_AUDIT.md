@@ -125,3 +125,20 @@ python scripts/prepare_dataset.py --data-dir data/real_raw --manifest-out data/p
 > - Seed moisture content (Oven dry method).
 > - Internal seed-borne endophytic fungal pathogens.
 > - Official agricultural seed lot certification.
+
+---
+
+## 7. Public Chickpea & Pulse Dataset Investigation
+
+To fulfill academic and engineering due diligence, an exhaustive investigation of public repositories was conducted:
+
+| Dataset / Source | Platform & DOI / Repo | Format & Images | Class Schema | Suitability for SeedVision AI |
+| :--- | :--- | :--- | :--- | :--- |
+| **PulseLibrary** | Mendeley Data (`10.17632/kw7x5xyprh.1`) | 3,123 real pulse images (chickpea, peas, lentils, mung bean, black gram) | Categorized by **pulse species**, not physical quality | **High potential**: Contains real chickpea photos, but requires manual defect labeling into the 4 project classes. |
+| **TRCS_8_SET** | GitHub (`ibrahimkilic/TRCS_8_SET`) | 7,200 images across 8 certified varieties | Categorized by **botanical cultivar** (Nihatbey, Çiftçi, Sarı98, etc.) | **Unsuitable as-is**: All seeds are certified healthy varieties without annotated mechanical, fungal, or insect defects. |
+| **SOYPR** | GitHub (`gabriel-bertolini/SOYPR`) | Legume defect photos (intact, cercospora, mechanical, bug) | Matches defect taxonomy | **Domain mismatch**: Targets soybean (*Glycine max*), not chickpea (*Cicer arietinum*). |
+| **Fusarium Wilt** | Kaggle | Foliage photos | Crop leaf disease | **Unsuitable**: Images show whole plants and leaves, not harvested seeds. |
+
+**Auditor Conclusion:**
+No publicly accessible dataset exists that provides pre-labeled chickpea grain photographs organized into `sound_healthy`, `discolored_spotted`, `broken_cracked`, and `shrivelled_damaged`. Rather than fabricating data or force-fitting an unaligned dataset, SeedVision AI provides the dedicated ingestion CLI (`scripts/ingest_real_data.py`) and standard directory scaffold (`data/real_raw/`) to support genuine agronomic evaluation as soon as verified field samples are provided.
+

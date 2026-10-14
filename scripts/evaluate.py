@@ -43,6 +43,12 @@ def main():
         help="Dataset split to evaluate against (default: test).",
     )
     parser.add_argument(
+        "--splits-dir",
+        type=str,
+        default=None,
+        help="Path to directory containing split manifests (e.g. data/processed/splits_real).",
+    )
+    parser.add_argument(
         "--device",
         type=str,
         default="cpu",
@@ -69,7 +75,7 @@ def main():
     model_name = payload.get("model_name", ckpt_path.stem.replace("best_", ""))
 
     # Load requested split manifest
-    splits_dir = Path(cfg.dataset.splits_dir)
+    splits_dir = Path(args.splits_dir) if args.splits_dir else Path(cfg.dataset.splits_dir)
     manifest_file = splits_dir / f"{args.split}_manifest.csv"
 
     if not manifest_file.is_file():
