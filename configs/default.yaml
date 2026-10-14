@@ -1,0 +1,53 @@
+project:
+  name: "SeedVision AI"
+  version: "1.0.0"
+  description: "Deep Learning-Based Agricultural Seed Quality Grader"
+
+dataset:
+  seed_type: "Chickpea"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  manifest_path: "data/processed/dataset_manifest.csv"
+  splits_dir: "data/processed/splits"
+  classes:
+    - "sound_healthy"
+    - "discolored_spotted"
+    - "broken_cracked"
+    - "shrivelled_damaged"
+  class_descriptions:
+    sound_healthy: "Physically intact, uniform coloration, no mechanical fissures or surface lesions."
+    discolored_spotted: "Necrotic spots, fungal blemishes, or severe discoloration from moisture."
+    broken_cracked: "Mechanical fractures, split cotyledons, or severed seed coat."
+    shrivelled_damaged: "Wrinkled, underdeveloped morphology, or insect penetration holes."
+  split_ratios:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  image_size: [128, 128]
+  normalization:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  num_workers: 0
+
+augmentation:
+  enabled: true
+  horizontal_flip: true
+  vertical_flip: true
+  rotation_degrees: 15
+  brightness_contrast: true
+  brightness_factor: 0.15
+  contrast_factor: 0.15
+
+training:
+  epochs: 25
+  batch_size: 16
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  early_stopping_patience: 6
+  device: "auto"
+  seed: 42
+
+paths:
+  checkpoints_dir: "artifacts/checkpoints"
+  metrics_dir: "artifacts/metrics"
+  figures_dir: "artifacts/figures"

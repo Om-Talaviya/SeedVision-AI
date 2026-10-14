@@ -1,0 +1,22 @@
+# Inherits defaults from default.yaml with CNN-specific parameters
+model:
+  architecture: "custom_cnn"
+  name: "SeedNet-Baseline"
+  num_classes: 4
+  input_channels: 3
+  conv_channels: [32, 64, 128, 256]
+  kernel_size: 3
+  pool_size: 2
+  dropout_rate: 0.35
+  dense_units: 256
+  target_layer: "features.10" # Last convolutional block before pooling for Grad-CAM
+
+training:
+  epochs: 25
+  batch_size: 16
+  learning_rate: 0.0008
+  optimizer: "adam"
+  weight_decay: 0.0001
+  scheduler: "cosine"
+  min_lr: 0.00001
+  early_stopping_patience: 6

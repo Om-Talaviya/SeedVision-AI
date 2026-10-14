@@ -1,0 +1,38 @@
+{
+  "epoch": 10,
+  "architecture": "custom_cnn",
+  "model_name": "SeedNet-Baseline",
+  "val_loss": 0.65627,
+  "val_acc": 1.0,
+  "is_best": true,
+  "classes": [
+    "sound_healthy",
+    "discolored_spotted",
+    "broken_cracked",
+    "shrivelled_damaged"
+  ],
+  "num_classes": 4,
+  "image_size": [
+    128,
+    128
+  ],
+  "normalization": {
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "saved_at": "2026-10-14T16:53:31.057868+00:00",
+  "parameters": {
+    "total_parameters": 456228,
+    "trainable_parameters": 456228,
+    "frozen_parameters": 0,
+    "estimated_size_mb": 1.74
+  }
+}
