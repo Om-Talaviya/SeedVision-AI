@@ -29,6 +29,10 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
 
+      - name: Prepare synthetic verification fixtures
+        run: |
+          python scripts/prepare_dataset.py --generate-fixtures --samples-per-class 60
+
       - name: Run automated test suite
         env:
           PYTHONPATH: .
