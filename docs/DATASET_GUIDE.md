@@ -7,12 +7,16 @@ Chickpea is one of the world's primary legume pulse crops, cultivated across the
 
 ## 2. Morphological Quality Classes & Grading Rules
 
-| Class Name | Visual Quality Description | Primary Physical Defect Causes | Handling in SeedVision AI |
-| :--- | :--- | :--- | :--- |
-| **`sound_healthy`** | Intact testa (seed coat), characteristic angular chickpea keel/beak, smooth texture, uniform cream/beige pigmentation, zero lesions. | Optimal harvest conditions, proper drying, unblemished growth. | Target benchmark class. |
-| **`discolored_spotted`** | Dark brown/black necrotic surface spots, patchy fungal blemishes, or weathering stains across the testa. | Pre-harvest moisture exposure, fungal colonization (*Aspergillus*, *Fusarium*, *Ascochyta* blight). | Classified as damaged; requires localized spatial attribution. |
-| **`broken_cracked`** | Longitudinal or transverse cracks in the testa, cotyledon split, or missing seed coat fragments. | Rotary combine cylinder shear, high-drop handling, excessive drying speed. | Classified as defective; reduces seed storage life. |
-| **`shrivelled_damaged`** | Wrinkled, hollowed, or stunted seed morphology; visible insect boreholes. | Terminal drought during pod-filling stage, or pulse beetle (*Callosobruchus maculatus*) attack. | Classified as damaged; unviable for planting. |
+| Class Name | Visual Quality Description | Primary Physical Defect Causes | Operational CV Proxy | Official Standard Analogue |
+| :--- | :--- | :--- | :--- | :--- |
+| **`sound_healthy`** | Intact testa (seed coat), angular chickpea keel/beak, smooth texture, uniform cream/beige pigmentation. | Optimal harvest conditions, proper drying, unblemished growth. | Zero cracks; dark spots $\le 1.0\text{ mm}$ | Sound wholesome grain |
+| **`discolored_spotted`** | Dark brown/black necrotic surface spots, patchy fungal blemishes, or weathering stains. | Pre-harvest rain, fungal colonization (*Aspergillus*, *Fusarium*, *Ascochyta*). | Necrotic spots $\ge 5\%$ surface area | "Slightly Damaged" (AGMARK/USDA) |
+| **`broken_cracked`** | Fissures in the testa, cotyledon split, or missing seed coat fragments. | Rotary combine cylinder shear, high-drop handling, rapid drying. | Crack $> 1.5\text{ mm}$ exposing cotyledon | "Broken grains" (cotyledon split) |
+| **`shrivelled_damaged`** | Wrinkled, hollowed, or stunted morphology; insect boreholes. | Drought at pod-filling, or pulse beetle (*Callosobruchus*) attack. | Volume $< 75\%$ norm or circular borehole | "Shrivelled / Weevilled" |
+
+> [!NOTE]
+> **STATUTORY VS OPERATIONAL PROXY DISTINCTION:**
+> Official commercial pulse standards (AGMARK India, USDA GIPSA) regulate grain lots by **mass percentage (weight/weight)** in bulk samples (e.g. max 2% broken seeds by weight). Single-seed microscopic thresholds (e.g., $1.5\text{ mm}$ crack length, $5\%$ necrotic area) are **project-defined operational proxies** for RGB macro-computer-vision classification, NOT statutory standards. Full protocol documented in [REAL_DATA_ACQUISITION_WORKFLOW.md](file:///d:/AI/Projects/SeedVision%20AI/docs/REAL_DATA_ACQUISITION_WORKFLOW.md).
 
 ---
 

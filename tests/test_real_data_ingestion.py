@@ -179,3 +179,128 @@ def test_real_vs_synthetic_checkpoint_separation():
     real_model_name = f"{cfg.model.name}-{name_suffix}"
     assert real_model_name == "SeedNet-Baseline-Real"
     assert real_model_name != cfg.model.name, "Real model name must be strictly distinct from baseline"
+
+
+def test_annotations_csv_ingestion_and_ambiguous_discard():
+    """Verify annotations.csv ingestion, ambiguous_discard filtering, and unreviewed image exclusion."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        src = Path(tmp_dir) / "source"
+        tgt = Path(tmp_dir) / "target"
+        splits = Path(tmp_dir) / "splits"
+        src.mkdir(parents=True)
+
+        classes = ["sound_healthy", "broken_cracked"]
+
+        # Create 4 physical seeds for sound_healthy (each with 2 multi-view photos)
+        # and 4 physical seeds for broken_cracked
+        annot_rows = []
+        for cls in classes:
+            c_dir = src / cls
+            c_dir.mkdir(parents=True, exist_ok=True)
+            for s_idx in range(1, 5):
+                seed_id = f"phy_seed_{cls}_{s_idx:02d}"
+                for v_idx in [1, 2]:
+                    fname = f"arbitrary_filename_{cls}_{s_idx}_{v_idx}.jpg"
+                    im = Image.new("RGB", (100, 100), color=(100 + s_idx * 20, 50 + v_idx * 30, 20 + len(cls) * 5))
+                    im.save(c_dir / fname)
+                    annot_rows.append(
+                        {
+                            "filename": fname,
+                            "class_name": cls,
+                            "seed_id": seed_id,
+                            "confidence": "high",
+                            "notes": "Verified good view",
+                        }
+                    )
+
+        # Add an ambiguous discard sample
+        im_amb = Image.new("RGB", (100, 100), color=(50, 50, 50))
+        im_amb.save(src / "sound_healthy" / "blurry_seed.jpg")
+        annot_rows.append(
+            {
+                "filename": "blurry_seed.jpg",
+                "class_name": "ambiguous_discard",
+                "seed_id": "seed_ambiguous",
+                "confidence": "low",
+                "notes": "Out of focus and partial glare",
+            }
+        )
+
+        # Add an unreviewed image on disk (NOT in annotations.csv)
+        im_unrev = Image.new("RGB", (100, 100), color=(200, 200, 200))
+        im_unrev.save(src / "sound_healthy" / "unreviewed_sample.jpg")
+
+        # Save annotations.csv
+        annot_csv_path = src / "annotations.csv"
+        pd.DataFrame(annot_rows).to_csv(annot_csv_path, index=False)
+
+        res = audit_and_ingest_real_dataset(
+            source_dir=src,
+            target_dir=tgt,
+            splits_dir=splits,
+            classes=classes,
+            annotations_file=annot_csv_path,
+            provenance_path=Path(tmp_dir) / "provenance_real.json",
+        )
+
+        # Check results
+        assert res["annotation_manifest_used"] is True
+        assert res["ambiguous_discards_count"] == 1
+        assert res["unreviewed_images_skipped_count"] == 1
+        assert res["valid_images_retained"] == 16  # 2 classes * 4 seeds * 2 views = 16
+
+        # Check splits exist
+        train_df = pd.read_csv(splits / "train_manifest.csv")
+        test_df = pd.read_csv(splits / "test_manifest.csv")
+        val_df = pd.read_csv(splits / "val_manifest.csv")
+
+        # Unreviewed and ambiguous images MUST NOT exist in any split
+        all_split_files = set(train_df["filename"]).union(test_df["filename"]).union(val_df["filename"])
+        assert "blurry_seed.jpg" not in all_split_files
+        assert "unreviewed_sample.jpg" not in all_split_files
+
+        # Multi-view photos with different filenames MUST stay in same partition
+        for s_idx in range(1, 5):
+            for cls in classes:
+                s_id = f"{cls}_phy_seed_{cls}_{s_idx:02d}"
+                partitions_found = []
+                if s_id in train_df["seed_id"].values:
+                    partitions_found.append("train")
+                if s_id in val_df["seed_id"].values:
+                    partitions_found.append("val")
+                if s_id in test_df["seed_id"].values:
+                    partitions_found.append("test")
+
+                # The seed must appear in EXACTLY 1 partition
+                assert len(partitions_found) == 1, f"Seed {s_id} leaked across {partitions_found}"
+
+
+def test_evaluator_real_vs_synthetic_metadata():
+    """Verify ModelEvaluator sets appropriate evaluation_type and provenance tags."""
+    import torch
+    import torch.nn as nn
+    from seedvision.evaluation.metrics import ModelEvaluator
+
+    dummy_model = nn.Linear(10, 4)
+
+    # 1. Synthetic default
+    ev_synth = ModelEvaluator(
+        model=dummy_model,
+        classes=["a", "b", "c", "d"],
+        model_name="SeedNet-Baseline",
+    )
+    assert ev_synth.is_real is False
+    assert ev_synth.evaluation_type == "synthetic_pipeline_verification"
+    assert ev_synth.dataset_provenance == "synthetic_procedural_fixture"
+
+    # 2. Real evaluated
+    ev_real = ModelEvaluator(
+        model=dummy_model,
+        classes=["a", "b", "c", "d"],
+        model_name="SeedNet-Baseline-Real",
+        is_real_world_validated=True,
+    )
+    assert ev_real.is_real is True
+    assert ev_real.evaluation_type == "real_world_test_evaluation"
+    assert ev_real.dataset_provenance == "manually_annotated_genuine_photographs"
+

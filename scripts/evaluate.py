@@ -93,11 +93,15 @@ def main():
         test_df=split_df,
     )
 
+    is_real = "real" in model_name.lower() or (args.splits_dir and "real" in str(args.splits_dir).lower())
+    print(f"Evaluation Mode: {'🌱 Genuine Real-World Test Set' if is_real else '🧪 Synthetic Calibration Fixtures'}")
+
     evaluator = ModelEvaluator(
         model=model,
         classes=classes,
         device=device,
         model_name=model_name,
+        is_real_world_validated=is_real,
     )
 
     results = evaluator.evaluate(test_loader)

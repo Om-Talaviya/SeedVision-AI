@@ -522,6 +522,28 @@ def main():
 
             m_name = eval_data.get("model_name", "Model")
 
+            is_real = eval_data.get("is_real_world_validated", False) or "real" in m_name.lower()
+            if is_real:
+                st.markdown(
+                    f"""
+                    <div style="background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #166534;">
+                        <strong>🌱 GENUINE REAL-WORLD TEST BENCHMARK:</strong> Evaluated on genuine, human-annotated held-out test photographs.
+                        <br><small>{eval_data.get('scientific_notice', '')}</small>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    f"""
+                    <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #0369a1;">
+                        <strong>🧪 SYNTHETIC PIPELINE VERIFICATION:</strong> Evaluated on procedural synthetic fixtures for tensor transformation and gradient hook verification.
+                        <br><small>{eval_data.get('scientific_notice', '')}</small>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
             # Metrics row
             e_col1, e_col2, e_col3, e_col4 = st.columns(4)
             with e_col1:

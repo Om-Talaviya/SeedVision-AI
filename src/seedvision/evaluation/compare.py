@@ -76,14 +76,22 @@ def compare_models(
     csv_path = m_dir / "model_comparison_summary.csv"
     df.to_csv(csv_path, index=False)
 
+    has_real = any(m.get("Evaluation Type") == "real_world_test_evaluation" for m in records)
+    all_real = all(m.get("Evaluation Type") == "real_world_test_evaluation" for m in records) if records else False
+
     summary_dict = {
         "num_models_evaluated": len(df),
-        "evaluation_type": "synthetic_pipeline_verification",
-        "dataset_provenance": "synthetic_procedural_fixture",
-        "is_real_world_validated": False,
+        "evaluation_type": "real_world_test_evaluation" if all_real else ("mixed" if has_real else "synthetic_pipeline_verification"),
+        "dataset_provenance": "manually_annotated_genuine_photographs" if all_real else ("mixed" if has_real else "synthetic_procedural_fixture"),
+        "is_real_world_validated": all_real,
         "scientific_notice": (
-            "Metrics reflect software pipeline convergence on synthetic procedural fixtures. "
-            "Real-world agronomic performance is pending certified pulse dataset acquisition."
+            "Metrics reflect empirical evaluation on genuine agricultural pulse test photographs."
+            if all_real
+            else (
+                "Metrics contain evaluations on real-world pulses as well as synthetic calibration fixtures."
+                if has_real
+                else "Metrics reflect software pipeline convergence on synthetic procedural fixtures. Real-world agronomic performance is pending certified pulse dataset acquisition."
+            )
         ),
         "models": records,
         "best_accuracy_model": df.sort_values(by="Accuracy (%)", ascending=False).iloc[0]["Model"]

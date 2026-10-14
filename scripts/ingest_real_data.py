@@ -115,6 +115,7 @@ def audit_and_ingest_real_dataset(
     copy_files: bool = True,
     seed: int = 42,
     provenance_path: Optional[Path] = None,
+    annotations_file: Optional[Path] = None,
 ) -> Dict:
     """Audit images in source_dir, detect duplicates, copy to target_dir, and partition splits."""
     validator = ImageValidator(min_width=min_size, min_height=min_size)
@@ -123,6 +124,8 @@ def audit_and_ingest_real_dataset(
     ahash_to_paths = defaultdict(list)
     valid_records = []
     invalid_records = []
+    skipped_unreviewed = []
+    discarded_ambiguous = []
 
     print(f"\n=== Auditing Real Seed Dataset in: {source_dir.resolve()} ===")
     print(f"Target classes: {classes}")
@@ -130,6 +133,50 @@ def audit_and_ingest_real_dataset(
     if not source_dir.exists():
         print(f"[NOTE] Source directory does not exist: {source_dir}")
         return {"status": "empty", "valid_count": 0, "classes_represented": {}}
+
+    # Check for annotations manifest CSV
+    annot_path = annotations_file
+    if annot_path is None:
+        potential_annot = source_dir / "annotations.csv"
+        if potential_annot.is_file():
+            annot_path = potential_annot
+
+    annot_mapping = {}
+    if annot_path and Path(annot_path).is_file():
+        annot_path = Path(annot_path)
+        print(f"\n[INFO] Loading independent annotation manifest: {annot_path.resolve()}")
+        df_ann = pd.read_csv(annot_path)
+        for _, row in df_ann.iterrows():
+            fname = str(row.get("filename", "")).strip()
+            if not fname:
+                continue
+            cls_name = str(row.get("class_name", "")).strip().lower()
+            conf = str(row.get("confidence", "high")).strip().lower()
+            notes = str(row.get("notes", "")).strip() if pd.notna(row.get("notes")) else ""
+
+            # Ambiguous-label policy: Exclude ambiguous_discard, uncertain, or low-confidence samples
+            if cls_name in ["ambiguous_discard", "discard", "unknown", "uncertain"] or conf == "low":
+                discarded_ambiguous.append({"filename": fname, "reason": f"Class '{cls_name}', Confidence '{conf}', Notes: {notes}"})
+                continue
+
+            if cls_name not in classes:
+                discarded_ambiguous.append({"filename": fname, "reason": f"Unrecognized class '{cls_name}' not in {classes}"})
+                continue
+
+            seed_id = str(row.get("seed_id", "")).strip() if pd.notna(row.get("seed_id")) else ""
+            batch_id = str(row.get("batch_id", "")).strip() if pd.notna(row.get("batch_id")) else ""
+            variety = str(row.get("variety", "")).strip() if pd.notna(row.get("variety")) else ""
+
+            annot_mapping[fname] = {
+                "class_name": cls_name,
+                "seed_id": seed_id or None,
+                "batch_id": batch_id or None,
+                "variety": variety or None,
+                "notes": notes,
+            }
+
+        print(f"  - Reviewed valid records:        {len(annot_mapping)}")
+        print(f"  - Discarded ambiguous entries:   {len(discarded_ambiguous)}")
 
     # Detect unrecognized directories in source_dir
     unrecognized_dirs = []
@@ -141,58 +188,85 @@ def audit_and_ingest_real_dataset(
         print(f"\n[WARNING] Unrecognized subdirectories found in {source_dir.name}: {unrecognized_dirs}")
         print(f"Only images inside the 4 target quality classes will be processed: {classes}")
 
-    # Discover images across class subfolders
+    # Discover images across class subfolders (or flat directory if annotations provided)
+    image_candidates = []
     for cls in classes:
         cls_folder = source_dir / cls
-        if not cls_folder.is_dir():
-            print(f"[WARN] Class folder not found: {cls_folder}")
+        if cls_folder.is_dir():
+            for p in sorted(cls_folder.glob("*.*")):
+                if p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp", ".bmp"]:
+                    image_candidates.append((p, cls))
+
+    # Also check root if images are placed flat with annotations
+    if annot_mapping:
+        for p in sorted(source_dir.glob("*.*")):
+            if p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp", ".bmp"]:
+                if p.name in annot_mapping:
+                    image_candidates.append((p, annot_mapping[p.name]["class_name"]))
+
+    # Process discovered images
+    processed_files = set()
+    for img_path, default_cls in image_candidates:
+        if img_path.name in processed_files:
+            continue
+        processed_files.add(img_path.name)
+
+        # If annotations manifest is active, enforce strict reviewed status
+        if annot_mapping:
+            if img_path.name in [d["filename"] for d in discarded_ambiguous]:
+                continue
+            if img_path.name not in annot_mapping:
+                skipped_unreviewed.append(img_path.name)
+                continue
+            cls = annot_mapping[img_path.name]["class_name"]
+            assigned_seed_id = annot_mapping[img_path.name]["seed_id"]
+        else:
+            cls = default_cls
+            assigned_seed_id = None
+
+        # Validate file integrity
+        v_res = validator.validate_file(str(img_path))
+        if not v_res.is_valid:
+            invalid_records.append({"path": str(img_path), "reason": v_res.error_message})
             continue
 
-        for img_path in sorted(cls_folder.glob("*.*")):
-            if img_path.suffix.lower() not in [".jpg", ".jpeg", ".png", ".webp", ".bmp"]:
-                continue
+        # Compute MD5
+        file_bytes = img_path.read_bytes()
+        md5_hash = hashlib.md5(file_bytes).hexdigest()
+        md5_to_paths[md5_hash].append(img_path)
 
-            # Validate file integrity
-            v_res = validator.validate_file(str(img_path))
-            if not v_res.is_valid:
-                invalid_records.append({"path": str(img_path), "reason": v_res.error_message})
-                continue
+        # Compute aHash
+        try:
+            with Image.open(img_path) as im:
+                ahash = compute_average_hash(im)
+        except Exception:
+            ahash = "unknown"
+        ahash_to_paths[ahash].append(img_path)
 
-            # Compute MD5
-            file_bytes = img_path.read_bytes()
-            md5_hash = hashlib.md5(file_bytes).hexdigest()
-            md5_to_paths[md5_hash].append(img_path)
-
-            # Compute aHash
-            try:
-                with Image.open(img_path) as im:
-                    ahash = compute_average_hash(im)
-            except Exception:
-                ahash = "unknown"
-            ahash_to_paths[ahash].append(img_path)
-
-            # Extract physical seed ID from stem (strip class prefix if present)
+        # Extract physical seed ID (use explicit from CSV or stem heuristic)
+        if assigned_seed_id:
+            seed_id = f"{cls}_{assigned_seed_id}" if not assigned_seed_id.startswith(cls) else assigned_seed_id
+        else:
             stem = img_path.stem
             if stem.startswith(cls + "_"):
                 remainder = stem[len(cls) + 1 :]
-                # If multi-view, e.g. "seed01_v1", isolate seed01
                 seed_id = f"{cls}_" + (remainder.split("_v")[0] if "_v" in remainder else remainder)
             else:
                 seed_id = f"{cls}_{stem}"
 
-            valid_records.append(
-                {
-                    "source_path": str(img_path.resolve()),
-                    "filename": img_path.name,
-                    "class_name": cls,
-                    "seed_id": seed_id,
-                    "md5": md5_hash,
-                    "ahash": ahash,
-                    "width": v_res.width,
-                    "height": v_res.height,
-                    "file_size_bytes": v_res.file_size_bytes,
-                }
-            )
+        valid_records.append(
+            {
+                "source_path": str(img_path.resolve()),
+                "filename": img_path.name,
+                "class_name": cls,
+                "seed_id": seed_id,
+                "md5": md5_hash,
+                "ahash": ahash,
+                "width": v_res.width,
+                "height": v_res.height,
+                "file_size_bytes": v_res.file_size_bytes,
+            }
+        )
 
     total_scanned = len(valid_records) + len(invalid_records)
     exact_duplicate_clusters = {k: v for k, v in md5_to_paths.items() if len(v) > 1}
@@ -288,6 +362,9 @@ def audit_and_ingest_real_dataset(
         "total_images_scanned": total_scanned,
         "valid_images_retained": len(deduped_records),
         "exact_duplicates_removed": duplicates_dropped,
+        "annotation_manifest_used": bool(annot_mapping),
+        "ambiguous_discards_count": len(discarded_ambiguous),
+        "unreviewed_images_skipped_count": len(skipped_unreviewed),
         "class_distribution": dict(class_counts),
         "unsupported_classes": unsupported_classes,
         "splits": {
@@ -296,6 +373,11 @@ def audit_and_ingest_real_dataset(
             "test_count": len(test_df),
             "splitting_method": "Class-stratified group-aware split (seed_id isolated)",
         },
+        "standards_distinction": (
+            "Single-seed morphological criteria (e.g. 1.5mm crack length, 5% necrotic spot area) are "
+            "project-defined operational computer vision proxies. Official statutory standards (AGMARK India and "
+            "USDA GIPSA) define defect tolerances as percentage by weight in bulk samples, not single-seed pixels."
+        ),
         "biological_boundary": (
             "Visual RGB inspection evaluates external seed coat morphology only. "
             "It does NOT evaluate physiological germination rate, internal embryo viability (Tetrazolium), "
@@ -340,6 +422,12 @@ def main():
         help="Destination directory for real data train/val/test splits (default: data/processed/splits_real).",
     )
     parser.add_argument(
+        "--annotations",
+        type=str,
+        default=None,
+        help="Path to independent annotations.csv manifest (default: looks for annotations.csv in source-dir).",
+    )
+    parser.add_argument(
         "--init-structure",
         action="store_true",
         help="Create scaffold directories and annotation guide in target-dir.",
@@ -378,6 +466,8 @@ def main():
         initialize_real_data_scaffold(source_dir)
         return
 
+    annotations_file = Path(args.annotations) if args.annotations else None
+
     res = audit_and_ingest_real_dataset(
         source_dir=source_dir,
         target_dir=target_dir,
@@ -385,6 +475,7 @@ def main():
         provenance_source=args.provenance_source,
         license_name=args.license,
         copy_files=not args.verify_only,
+        annotations_file=annotations_file,
     )
 
     if res.get("status") in ["empty", "insufficient_samples"]:
