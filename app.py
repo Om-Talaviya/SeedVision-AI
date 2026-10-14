@@ -185,7 +185,9 @@ def main():
     if checkpoints:
         st.sidebar.success(f"{len(checkpoints)} model checkpoint(s) ready")
         for cp in checkpoints:
-            st.sidebar.markdown(f"- `{cp.name}`")
+            is_real = "real" in cp.name.lower()
+            tag = "🌱 Real-Data" if is_real else "🧪 Synthetic"
+            st.sidebar.markdown(f"- `{cp.name}` <small style='color: {'#166534' if is_real else '#0369a1'};'>({tag})</small>", unsafe_allow_html=True)
     else:
         st.sidebar.warning("No checkpoints found. Train models via CLI or scripts.")
 

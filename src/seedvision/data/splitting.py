@@ -53,49 +53,69 @@ def create_leakage_resistant_splits(
     test_subsets = []
 
     unique_classes = df[class_col].unique()
+    if len(unique_classes) == 0:
+        raise ValueError("Cannot split an empty dataset manifest.")
 
     for cls in unique_classes:
         cls_df = df[df[class_col] == cls].copy().reset_index(drop=True)
 
-        if group_col and group_col in cls_df.columns and cls_df[group_col].nunique() > 2:
-            groups = cls_df[group_col].values
-            test_val_fraction = val_ratio + test_ratio
-
-            # First split: train vs (val + test)
-            gss_1 = GroupShuffleSplit(
-                n_splits=1, test_size=test_val_fraction, random_state=random_state
-            )
-            train_idx, temp_idx = next(gss_1.split(cls_df, groups=groups))
-
-            cls_train = cls_df.iloc[train_idx].copy()
-            cls_temp = cls_df.iloc[temp_idx].copy().reset_index(drop=True)
-
-            # Second split: val vs test
-            test_fraction_of_temp = test_ratio / (val_ratio + test_ratio)
-            temp_groups = cls_temp[group_col].values
-
-            if cls_temp[group_col].nunique() > 1:
-                gss_2 = GroupShuffleSplit(
-                    n_splits=1, test_size=test_fraction_of_temp, random_state=random_state
-                )
-                val_idx, test_idx = next(gss_2.split(cls_temp, groups=temp_groups))
-                cls_val = cls_temp.iloc[val_idx].copy()
-                cls_test = cls_temp.iloc[test_idx].copy()
-            else:
-                half = len(cls_temp) // 2
-                cls_val = cls_temp.iloc[:half].copy()
-                cls_test = cls_temp.iloc[half:].copy()
-
+        # Determine grouping identifier
+        if group_col and group_col in cls_df.columns:
+            unique_groups = cls_df[group_col].dropna().unique().tolist()
         else:
-            # Fallback simple partition per class
-            n = len(cls_df)
-            shuffled = cls_df.sample(frac=1.0, random_state=random_state).reset_index(drop=True)
-            n_train = int(n * train_ratio)
-            n_val = int(n * val_ratio)
+            # If no group column, each row is an independent sample
+            cls_df["_auto_sample_id"] = [f"{cls}_s{i}" for i in range(len(cls_df))]
+            group_col_effective = "_auto_sample_id"
+            unique_groups = cls_df[group_col_effective].unique().tolist()
 
-            cls_train = shuffled.iloc[:n_train].copy()
-            cls_val = shuffled.iloc[n_train : n_train + n_val].copy()
-            cls_test = shuffled.iloc[n_train + n_val :].copy()
+        k = len(unique_groups)
+        if k < 3:
+            raise ValueError(
+                f"Class '{cls}' contains only {k} physical sample/group(s). "
+                f"At least 3 distinct physical sample groups are required per class to construct "
+                f"non-empty, leakage-free train, validation, and test partitions."
+            )
+
+        # Deterministically shuffle the unique groups
+        rng = np.random.RandomState(random_state)
+        shuffled_groups = list(unique_groups)
+        rng.shuffle(shuffled_groups)
+
+        # Compute partition group counts ensuring at least 1 group per split
+        n_val = max(1, int(round(k * val_ratio)))
+        n_test = max(1, int(round(k * test_ratio)))
+
+        if n_val + n_test >= k:
+            n_val = 1
+            n_test = 1
+
+        n_train = k - n_val - n_test
+        if n_train < 1:
+            n_train = 1
+            if n_val > 1:
+                n_val -= 1
+            elif n_test > 1:
+                n_test -= 1
+
+        val_groups = set(shuffled_groups[:n_val])
+        test_groups = set(shuffled_groups[n_val : n_val + n_test])
+        train_groups = set(shuffled_groups[n_val + n_test :])
+
+        # Enforce mathematical disjointness
+        assert len(train_groups.intersection(val_groups)) == 0
+        assert len(train_groups.intersection(test_groups)) == 0
+        assert len(val_groups.intersection(test_groups)) == 0
+
+        # Subsetting
+        active_col = group_col if (group_col and group_col in cls_df.columns) else "_auto_sample_id"
+        cls_train = cls_df[cls_df[active_col].isin(train_groups)].copy()
+        cls_val = cls_df[cls_df[active_col].isin(val_groups)].copy()
+        cls_test = cls_df[cls_df[active_col].isin(test_groups)].copy()
+
+        if "_auto_sample_id" in cls_df.columns:
+            cls_train.drop(columns=["_auto_sample_id"], inplace=True)
+            cls_val.drop(columns=["_auto_sample_id"], inplace=True)
+            cls_test.drop(columns=["_auto_sample_id"], inplace=True)
 
         train_subsets.append(cls_train)
         val_subsets.append(cls_val)
@@ -109,6 +129,10 @@ def create_leakage_resistant_splits(
     train_df["split"] = "train"
     val_df["split"] = "val"
     test_df["split"] = "test"
+
+    # Final split sanity assertions
+    if len(train_df) == 0 or len(val_df) == 0 or len(test_df) == 0:
+        raise RuntimeError("Splitting algorithm produced an unexpectedly empty partition.")
 
     return train_df, val_df, test_df
 

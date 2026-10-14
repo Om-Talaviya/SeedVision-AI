@@ -127,6 +127,20 @@ def audit_and_ingest_real_dataset(
     print(f"\n=== Auditing Real Seed Dataset in: {source_dir.resolve()} ===")
     print(f"Target classes: {classes}")
 
+    if not source_dir.exists():
+        print(f"[NOTE] Source directory does not exist: {source_dir}")
+        return {"status": "empty", "valid_count": 0, "classes_represented": {}}
+
+    # Detect unrecognized directories in source_dir
+    unrecognized_dirs = []
+    for d in sorted(source_dir.iterdir()):
+        if d.is_dir() and d.name not in classes and not d.name.startswith("."):
+            unrecognized_dirs.append(d.name)
+
+    if unrecognized_dirs:
+        print(f"\n[WARNING] Unrecognized subdirectories found in {source_dir.name}: {unrecognized_dirs}")
+        print(f"Only images inside the 4 target quality classes will be processed: {classes}")
+
     # Discover images across class subfolders
     for cls in classes:
         cls_folder = source_dir / cls
@@ -157,9 +171,14 @@ def audit_and_ingest_real_dataset(
                 ahash = "unknown"
             ahash_to_paths[ahash].append(img_path)
 
-            # Extract physical seed ID from stem (e.g., "broken_001_v1" -> "broken_001")
-            stem_parts = img_path.stem.split("_")
-            seed_id = "_".join(stem_parts[:2]) if len(stem_parts) >= 2 else img_path.stem
+            # Extract physical seed ID from stem (strip class prefix if present)
+            stem = img_path.stem
+            if stem.startswith(cls + "_"):
+                remainder = stem[len(cls) + 1 :]
+                # If multi-view, e.g. "seed01_v1", isolate seed01
+                seed_id = f"{cls}_" + (remainder.split("_v")[0] if "_v" in remainder else remainder)
+            else:
+                seed_id = f"{cls}_{stem}"
 
             valid_records.append(
                 {
@@ -359,7 +378,7 @@ def main():
         initialize_real_data_scaffold(source_dir)
         return
 
-    audit_and_ingest_real_dataset(
+    res = audit_and_ingest_real_dataset(
         source_dir=source_dir,
         target_dir=target_dir,
         splits_dir=splits_dir,
@@ -367,6 +386,11 @@ def main():
         license_name=args.license,
         copy_files=not args.verify_only,
     )
+
+    if res.get("status") in ["empty", "insufficient_samples"]:
+        print(f"\n[ACTION REQUIRED] Real data ingestion halted: status='{res.get('status')}'.")
+        print("Please review data/real_raw/README.md and add genuine single-seed photos for all classes.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

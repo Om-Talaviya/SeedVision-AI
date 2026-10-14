@@ -68,8 +68,11 @@ def main():
         cfg.model.architecture = "mobilenet_v2"
         cfg.model.name = "MobileNetV2-Transfer"
 
-    if args.name_suffix:
-        cfg.model.name = f"{cfg.model.name}-{args.name_suffix}"
+    suffix = args.name_suffix
+    if not suffix and args.splits_dir and "real" in str(args.splits_dir).lower():
+        suffix = "Real"
+    if suffix:
+        cfg.model.name = f"{cfg.model.name}-{suffix}"
 
     if args.epochs is not None:
         cfg.training.epochs = args.epochs

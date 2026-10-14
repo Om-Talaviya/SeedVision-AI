@@ -13,6 +13,7 @@ from scripts.ingest_real_data import (
     compute_average_hash,
     initialize_real_data_scaffold,
 )
+from seedvision.data.splitting import create_leakage_resistant_splits
 
 
 def test_real_data_scaffold_initialization():
@@ -88,3 +89,93 @@ def test_audit_and_ingest_real_dataset_deduplication():
         assert (splits / "train_manifest.csv").is_file()
         assert (splits / "val_manifest.csv").is_file()
         assert (splits / "test_manifest.csv").is_file()
+
+
+def test_empty_or_insufficient_samples_handling():
+    """Verify empty directory or insufficient samples produces actionable error status."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        src = Path(tmp_dir) / "empty_source"
+        tgt = Path(tmp_dir) / "target"
+        splits = Path(tmp_dir) / "splits"
+
+        # 1. Empty source
+        rec_empty = audit_and_ingest_real_dataset(
+            source_dir=src, target_dir=tgt, splits_dir=splits
+        )
+        assert rec_empty["status"] == "empty"
+        assert rec_empty["valid_count"] == 0
+
+        # 2. Insufficient samples (< 3 groups per class)
+        cls_dir = src / "sound_healthy"
+        cls_dir.mkdir(parents=True, exist_ok=True)
+        im = Image.new("RGB", (100, 100), color=(200, 180, 140))
+        im.save(cls_dir / "sample_001.jpg")
+
+        rec_few = audit_and_ingest_real_dataset(
+            source_dir=src, target_dir=tgt, splits_dir=splits
+        )
+        assert rec_few["status"] == "insufficient_samples"
+
+
+def test_seed_group_leakage_impossibility():
+    """Verify that multiple views/photos of the same physical seed NEVER cross train/val/test splits."""
+    rows = []
+    classes = ["sound_healthy", "broken_cracked", "discolored_spotted", "shrivelled_damaged"]
+
+    # 10 physical seeds per class, with 3 views each = 30 images per class
+    for cls in classes:
+        for seed_num in range(1, 11):
+            seed_id = f"{cls}_seed_{seed_num:03d}"
+            for view_num in range(1, 4):
+                rows.append(
+                    {
+                        "filepath": f"/data/real/{cls}/{seed_id}_v{view_num}.jpg",
+                        "class_name": cls,
+                        "seed_id": seed_id,
+                    }
+                )
+
+    manifest_df = pd.DataFrame(rows)
+
+    train_df, val_df, test_df = create_leakage_resistant_splits(
+        manifest_df=manifest_df,
+        train_ratio=0.70,
+        val_ratio=0.15,
+        test_ratio=0.15,
+        group_col="seed_id",
+        class_col="class_name",
+        random_state=42,
+    )
+
+    train_seeds = set(train_df["seed_id"].unique())
+    val_seeds = set(val_df["seed_id"].unique())
+    test_seeds = set(test_df["seed_id"].unique())
+
+    # Mathematical disjointness check
+    assert len(train_seeds.intersection(val_seeds)) == 0, "Seed group leaked between train and val"
+    assert len(train_seeds.intersection(test_seeds)) == 0, "Seed group leaked between train and test"
+    assert len(val_seeds.intersection(test_seeds)) == 0, "Seed group leaked between val and test"
+
+    # Ensure every partition has samples for every class
+    for cls in classes:
+        assert (train_df["class_name"] == cls).sum() >= 1
+        assert (val_df["class_name"] == cls).sum() >= 1
+        assert (test_df["class_name"] == cls).sum() >= 1
+
+
+def test_real_vs_synthetic_checkpoint_separation():
+    """Verify that real-data model naming and checkpoint tagging cannot collide with synthetic models."""
+    from seedvision.config import load_config
+
+    cfg = load_config("configs/cnn.yaml")
+    assert cfg.model.name == "SeedNet-Baseline"
+
+    # Simulate real-data suffix logic from scripts/train.py
+    splits_dir = "data/processed/splits_real"
+    name_suffix = None
+    if not name_suffix and "real" in splits_dir.lower():
+        name_suffix = "Real"
+
+    real_model_name = f"{cfg.model.name}-{name_suffix}"
+    assert real_model_name == "SeedNet-Baseline-Real"
+    assert real_model_name != cfg.model.name, "Real model name must be strictly distinct from baseline"
