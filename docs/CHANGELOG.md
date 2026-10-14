@@ -1,0 +1,44 @@
+# Changelog — SeedVision AI
+
+All notable changes to the SeedVision AI project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.0.0] - 2026-10-14
+
+### Added
+- **Core Deep Learning Models**:
+  - `CustomSeedCNN` (`SeedNet-Baseline`): 4-stage convolutional hierarchy with Batch Normalization, LeakyReLU, and Dropout-regularized classification head (456K parameters).
+  - `SeedTransferModel` (`MobileNetV2-Transfer`): Fine-tuned inverted residual bottleneck backbone with configurable layer unfreezing (2.39M parameters).
+- **Explainability**:
+  - Native `GradCAM` implementation in `src/seedvision/explainability/gradcam.py` supporting forward/backward hook registration, gradient pooling, ReLU attribution, and alpha overlay generation.
+- **Dataset Pipeline**:
+  - Comprehensive chickpea defect dataset (240 samples, 60 per class across `sound_healthy`, `discolored_spotted`, `broken_cracked`, and `shrivelled_damaged`).
+  - `ImageValidator` with corruption detection, dimension limits, and SHA-256 content hashing to eliminate duplicates.
+  - Leakage-resistant class-stratified group splitting algorithm in `src/seedvision/data/splitting.py`.
+- **Training Engine**:
+  - `SeedTrainer` with CrossEntropyLoss label smoothing ($\epsilon=0.05$), Cosine Annealing learning rate schedule, gradient norm clipping ($\le 1.0$), and early stopping.
+  - `CheckpointManager` generating atomic `.pt` checkpoints and `.pt.meta.json` inspection companions.
+- **Scientific Evaluation**:
+  - Evaluation suite computing Accuracy, Macro Precision, Macro Recall, Macro F1, Per-Class metrics, Confusion Matrix, Expected Calibration Error (ECE), and CPU Latency.
+  - Matplotlib plotting suite for dual-axis training curves, confusion matrix heatmaps, per-class bars, and reliability diagrams.
+  - Cross-architecture benchmark comparison tool (`compare_models`).
+- **Interactive Web Application**:
+  - 4-Page Streamlit dashboard (`app.py`) on port 8501 featuring Home, Seed Quality Analysis, Model Evaluation benchmarks, and Methodology documentation.
+  - Real-time demo sample loader and interactive Grad-CAM class hypothesis selector.
+- **Automated Testing & CI/CD**:
+  - 24-test pytest suite passing with 100% success rate on CPU.
+  - GitHub Actions CI workflow in `.github/workflows/tests.yml`.
+- **Governance & Documentation**:
+  - Comprehensive PRD, TRD, Architecture Blueprint, Backend Data Schemas, Flow Sequence Diagrams, ADRs, UI/UX Design System, and College Presentation Viva Guide.
+
+### Changed
+- Standardized `seed_id` granularity to avoid group collapsing during dataset partitioning.
+- Refactored `CheckpointManager` to guarantee native boolean casting for JSON metadata serialization in Python 3.13.
+
+### Fixed
+- Resolved duplicate detection false-positives in synthetic unit test fixtures by generating unique RGB offsets per class.
+- Fixed raw string escape sequences in Streamlit methodology tab for LaTeX formulas.
