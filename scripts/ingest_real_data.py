@@ -91,10 +91,15 @@ Place single-seed macro photographs into the corresponding quality class directo
 - **Resolution**: Single-seed macro capture with seed occupying at least 60% of frame (minimum 128x128 px).
 - **Naming Convention**: `{class_name}_{batch_id}_{seed_id}_{view_idx}.jpg` (e.g., `broken_cracked_B1_S042_v1.jpg`).
 
-## Ingestion Command
-To validate, audit duplicates, and generate leakage-free splits:
+## Ingestion Commands
+To audit duplicates and generate leakage-free splits in-place:
 ```bash
-python scripts/ingest_real_data.py --source-dir data/real_raw --target-dir data/real_raw --provenance-source "University Trial Farm"
+python scripts/ingest_real_data.py --source-dir data/real_raw --splits-dir data/processed/splits_real --provenance-source "University Trial Farm"
+```
+
+If staging from an external raw camera dump into `data/real_raw`:
+```bash
+python scripts/ingest_real_data.py --source-dir /path/to/camera_dump --target-dir data/real_raw --splits-dir data/processed/splits_real --provenance-source "University Trial Farm"
 ```
 """
     readme_path.write_text(readme_content, encoding="utf-8")
@@ -133,6 +138,23 @@ def audit_and_ingest_real_dataset(
     if not source_dir.exists():
         print(f"[NOTE] Source directory does not exist: {source_dir}")
         return {"status": "empty", "valid_count": 0, "classes_represented": {}}
+
+    # Validate directory containment to prevent recursive loops
+    src_res = source_dir.resolve()
+    tgt_res = target_dir.resolve()
+    splits_res = splits_dir.resolve()
+
+    is_in_place = (src_res == tgt_res)
+
+    if not is_in_place:
+        if splits_res == src_res or splits_res in src_res.parents or src_res in splits_res.parents:
+            raise ValueError(f"Splits directory {splits_res} cannot be nested inside or equal to source directory {src_res}.")
+        if tgt_res in src_res.parents or src_res in tgt_res.parents:
+            raise ValueError(f"Target directory {tgt_res} cannot be nested inside source directory {src_res}.")
+
+    # In in-place mode, files already reside in their destination; disable copying
+    if is_in_place:
+        copy_files = False
 
     # Check for annotations manifest CSV
     annot_path = annotations_file
@@ -189,18 +211,19 @@ def audit_and_ingest_real_dataset(
         print(f"Only images inside the 4 target quality classes will be processed: {classes}")
 
     # Discover images across class subfolders (or flat directory if annotations provided)
+    # Exclude non-class folders or manifest files to prevent re-ingestion
     image_candidates = []
     for cls in classes:
         cls_folder = source_dir / cls
         if cls_folder.is_dir():
             for p in sorted(cls_folder.glob("*.*")):
-                if p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp", ".bmp"]:
+                if p.is_file() and p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp", ".bmp"]:
                     image_candidates.append((p, cls))
 
     # Also check root if images are placed flat with annotations
     if annot_mapping:
         for p in sorted(source_dir.glob("*.*")):
-            if p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp", ".bmp"]:
+            if p.is_file() and p.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp", ".bmp"]:
                 if p.name in annot_mapping:
                     image_candidates.append((p, annot_mapping[p.name]["class_name"]))
 
@@ -306,7 +329,7 @@ def audit_and_ingest_real_dataset(
 
     print(f"\nRetained {len(deduped_records)} unique records after dropping {duplicates_dropped} exact duplicates.")
 
-    # Copy files to target directory if requested
+    # Copy files to target directory if staging mode is active
     target_dir.mkdir(parents=True, exist_ok=True)
     for r in deduped_records:
         src = Path(r["source_path"])
@@ -314,7 +337,15 @@ def audit_and_ingest_real_dataset(
         dest_folder.mkdir(parents=True, exist_ok=True)
         dest = dest_folder / r["filename"]
         if copy_files and src.resolve() != dest.resolve():
-            shutil.copy2(src, dest)
+            if dest.exists():
+                existing_bytes = dest.read_bytes()
+                existing_md5 = hashlib.md5(existing_bytes).hexdigest()
+                if existing_md5 != r["md5"]:
+                    raise FileExistsError(
+                        f"Target file {dest} already exists with differing content MD5: {existing_md5} vs {r['md5']}"
+                    )
+            else:
+                shutil.copy2(src, dest)
         r["filepath"] = str(dest.resolve())
 
     # Create DataFrame manifest
@@ -390,11 +421,16 @@ def audit_and_ingest_real_dataset(
     with open(prov_file, "w", encoding="utf-8") as f:
         json.dump(provenance_record, f, indent=2)
 
+    # Also persist inside splits_dir so evaluate.py has localized provenance
+    splits_prov_file = splits_dir / "provenance_real.json"
+    with open(splits_prov_file, "w", encoding="utf-8") as f:
+        json.dump(provenance_record, f, indent=2)
+
     print(f"\n[SUCCESS] Real dataset ingestion and split creation complete!")
     print(f"  - Train split: {len(train_df)} samples -> {splits_dir / 'train_manifest.csv'}")
     print(f"  - Val split:   {len(val_df)} samples -> {splits_dir / 'val_manifest.csv'}")
     print(f"  - Test split:  {len(test_df)} samples -> {splits_dir / 'test_manifest.csv'}")
-    print(f"  - Provenance:  {prov_file.resolve()}")
+    print(f"  - Provenance:  {prov_file.resolve()} and {splits_prov_file.resolve()}")
 
     return provenance_record
 
@@ -412,8 +448,8 @@ def main():
     parser.add_argument(
         "--target-dir",
         type=str,
-        default="data/real_raw",
-        help="Destination directory for validated real dataset (default: data/real_raw).",
+        default=None,
+        help="Destination directory for validated real dataset (optional; defaults to --source-dir for in-place mode).",
     )
     parser.add_argument(
         "--splits-dir",
@@ -430,7 +466,7 @@ def main():
     parser.add_argument(
         "--init-structure",
         action="store_true",
-        help="Create scaffold directories and annotation guide in target-dir.",
+        help="Create scaffold directories and annotation guide in target-dir or source-dir.",
     )
     parser.add_argument(
         "--verify-only",
@@ -451,13 +487,13 @@ def main():
     )
     args = parser.parse_args()
 
-    target_dir = Path(args.target_dir)
+    source_dir = Path(args.source_dir)
+    target_dir = Path(args.target_dir) if args.target_dir else source_dir
 
     if args.init_structure:
         initialize_real_data_scaffold(target_dir)
         return
 
-    source_dir = Path(args.source_dir)
     splits_dir = Path(args.splits_dir)
 
     if not source_dir.exists():

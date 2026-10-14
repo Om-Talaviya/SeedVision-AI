@@ -93,11 +93,7 @@ class ModelEvaluator:
         self.classes = classes
         self.model_name = model_name
 
-        self.is_real = (
-            is_real_world_validated
-            if is_real_world_validated is not None
-            else ("real" in self.model_name.lower())
-        )
+        self.is_real = bool(is_real_world_validated)
         self.evaluation_type = evaluation_type or (
             "real_world_test_evaluation" if self.is_real else "synthetic_pipeline_verification"
         )

@@ -10,6 +10,8 @@ from seedvision.evaluation.plots import (
     plot_training_curves,
 )
 
+from seedvision.evaluation.provenance_verifier import verify_evaluation_provenance
+
 __all__ = [
     "ModelEvaluator",
     "compute_ece",
@@ -19,4 +21,5 @@ __all__ = [
     "plot_calibration_curve",
     "plot_model_comparison",
     "compare_models",
+    "verify_evaluation_provenance",
 ]

@@ -185,9 +185,18 @@ def main():
     if checkpoints:
         st.sidebar.success(f"{len(checkpoints)} model checkpoint(s) ready")
         for cp in checkpoints:
-            is_real = "real" in cp.name.lower()
-            tag = "🌱 Real-Data" if is_real else "🧪 Synthetic"
-            st.sidebar.markdown(f"- `{cp.name}` <small style='color: {'#166534' if is_real else '#0369a1'};'>({tag})</small>", unsafe_allow_html=True)
+            meta_path = cp.with_suffix(".pt.meta.json")
+            is_real_trained = False
+            if meta_path.is_file():
+                try:
+                    import json as _json
+                    with open(meta_path, "r", encoding="utf-8") as f:
+                        m_data = _json.load(f)
+                    is_real_trained = m_data.get("is_real_world_trained", False) is True
+                except Exception:
+                    pass
+            tag = "🌱 Real-Data" if is_real_trained else "🧪 Synthetic"
+            st.sidebar.markdown(f"- `{cp.name}` <small style='color: {'#166534' if is_real_trained else '#0369a1'};'>({tag})</small>", unsafe_allow_html=True)
     else:
         st.sidebar.warning("No checkpoints found. Train models via CLI or scripts.")
 
@@ -522,12 +531,23 @@ def main():
 
             m_name = eval_data.get("model_name", "Model")
 
-            is_real = eval_data.get("is_real_world_validated", False) or "real" in m_name.lower()
+            is_real = eval_data.get("is_real_world_validated") is True
+            eval_type = eval_data.get("evaluation_type", "")
             if is_real:
                 st.markdown(
                     f"""
                     <div style="background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #166534;">
                         <strong>🌱 GENUINE REAL-WORLD TEST BENCHMARK:</strong> Evaluated on genuine, human-annotated held-out test photographs.
+                        <br><small>{eval_data.get('scientific_notice', '')}</small>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            elif eval_type == "unverified_evaluation":
+                st.markdown(
+                    f"""
+                    <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #92400e;">
+                        <strong>⚠️ UNVERIFIED EVALUATION RUN:</strong> Real-world provenance criteria could not be confirmed (e.g. synthetic checkpoint or unverified dataset).
                         <br><small>{eval_data.get('scientific_notice', '')}</small>
                     </div>
                     """,

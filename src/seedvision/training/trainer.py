@@ -191,6 +191,30 @@ class SeedTrainer:
             else:
                 epochs_without_improvement += 1
 
+            # Determine training dataset provenance
+            splits_p = Path(self.config.dataset.splits_dir)
+            is_real_train = False
+            prov_status = "synthetic_procedural_fixture"
+            for cand in [
+                splits_p / "provenance_real.json",
+                splits_p.parent / "provenance_real.json",
+                Path("data/provenance_real.json"),
+            ]:
+                if cand.is_file():
+                    try:
+                        import json as _json
+                        with open(cand, "r", encoding="utf-8") as _f:
+                            p_data = _json.load(_f)
+                        if (
+                            p_data.get("is_real_world_photograph") is True
+                            and p_data.get("provenance_status") == "genuine_photograph"
+                        ):
+                            is_real_train = True
+                            prov_status = "genuine_photograph"
+                            break
+                    except Exception:
+                        pass
+
             # Save checkpoint
             saved_path = self.checkpoint_manager.save(
                 model=self.model,
@@ -206,7 +230,11 @@ class SeedTrainer:
                     "mean": self.config.dataset.normalization.mean,
                     "std": self.config.dataset.normalization.std,
                 },
-                extra_metadata={"seed_type": self.config.dataset.seed_type},
+                extra_metadata={
+                    "seed_type": self.config.dataset.seed_type,
+                    "is_real_world_trained": is_real_train,
+                    "dataset_provenance": prov_status,
+                },
             )
             if is_best:
                 best_checkpoint_path = saved_path

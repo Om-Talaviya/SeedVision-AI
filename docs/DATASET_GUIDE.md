@@ -58,8 +58,9 @@ Place collected chickpea photos into their corresponding class subdirectories.
 
 ### Step 3: Run Ingestion, Deduplication, and Leakage-Resistant Splitting
 ```bash
-python scripts/ingest_real_data.py --source-dir data/real_raw --target-dir data/real_raw --splits-dir data/processed/splits_real --provenance-source "Trial Farm Batch 2026" --license "CC BY 4.0"
+python scripts/ingest_real_data.py --source-dir data/real_raw --splits-dir data/processed/splits_real --provenance-source "Trial Farm Batch 2026" --license "CC BY 4.0"
 ```
+*(Note: `--target-dir` is optional; if omitted, `scripts/ingest_real_data.py` operates in-place without duplicating raw files or causing recursive copying loops. For external camera card staging, specify `--source-dir <card_path> --target-dir data/real_raw`.)*
 The ingestion engine:
 1. Validates image integrity (detects zero-byte files, corrupted headers, and sub-64px images).
 2. Computes MD5 and average perceptual hashes (aHash) to detect exact and near-duplicates.

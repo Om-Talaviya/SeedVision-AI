@@ -98,6 +98,7 @@ def main():
 
     # Check for split manifests
     splits_dir = Path(args.splits_dir) if args.splits_dir else Path(cfg.dataset.splits_dir)
+    cfg.dataset.splits_dir = str(splits_dir)
     train_manifest = splits_dir / "train_manifest.csv"
     val_manifest = splits_dir / "val_manifest.csv"
 

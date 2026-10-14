@@ -304,3 +304,101 @@ def test_evaluator_real_vs_synthetic_metadata():
     assert ev_real.evaluation_type == "real_world_test_evaluation"
     assert ev_real.dataset_provenance == "manually_annotated_genuine_photographs"
 
+
+def test_renamed_synthetic_checkpoint_cannot_be_marked_real_world_validated():
+    """Prove that renaming a synthetic checkpoint to include 'Real' fails provenance verification."""
+    from seedvision.evaluation.provenance_verifier import verify_evaluation_provenance
+    import torch
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir)
+
+        # 1. Create a synthetic checkpoint renamed to include 'Real'
+        fake_checkpoint_path = tmp_path / "best_SeedNet-Baseline-Real.pt"
+        synthetic_payload = {
+            "model_state_dict": {},
+            "epoch": 10,
+            "val_loss": 0.1,
+            "val_acc": 0.95,
+            # Synthetic checkpoint lacks is_real_world_trained=True
+            "is_real_world_trained": False,
+            "dataset_provenance": "synthetic_procedural_fixture",
+        }
+        torch.save(synthetic_payload, fake_checkpoint_path)
+
+        # 2. Create splits directory with genuine provenance to simulate evaluated folder
+        splits_dir = tmp_path / "splits_real"
+        splits_dir.mkdir(parents=True)
+        prov_record = {
+            "is_real_world_photograph": True,
+            "provenance_status": "genuine_photograph",
+            "valid_images_retained": 10,
+        }
+        with open(splits_dir / "provenance_real.json", "w", encoding="utf-8") as f:
+            json.dump(prov_record, f)
+
+        # Create dummy test manifest with existing dummy image
+        img_path = tmp_path / "dummy_real.jpg"
+        Image.new("RGB", (64, 64), color=(120, 100, 80)).save(img_path)
+        test_df = pd.DataFrame([{"filepath": str(img_path), "class_name": "sound_healthy", "seed_id": "seed_01"}])
+        test_df.to_csv(splits_dir / "test_manifest.csv", index=False)
+
+        # 3. Run provenance verification
+        result = verify_evaluation_provenance(
+            checkpoint_path=fake_checkpoint_path,
+            splits_dir=splits_dir,
+            data_dir=tmp_path,
+        )
+
+        # Verification must FAIL because the checkpoint itself is synthetic
+        assert result["is_real_world_validated"] is False
+        assert result["evaluation_type"] == "unverified_evaluation"
+        assert "checkpoint lacks verified genuine training metadata" in result["verification_details"]["reason"]
+
+
+def test_in_place_ingestion_safety_and_nested_prevention():
+    """Verify in-place ingestion works without duplication and nested directories are rejected."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        root = Path(tmp_dir)
+        raw_dir = root / "real_raw"
+        splits_dir = root / "splits_real"
+        classes = ["sound_healthy", "broken_cracked"]
+
+        # Populate images directly in raw_dir
+        for cls_idx, cls in enumerate(classes):
+            c_dir = raw_dir / cls
+            c_dir.mkdir(parents=True, exist_ok=True)
+            for i in range(1, 6):
+                im = Image.new("RGB", (100, 100), color=(100 + i * 10, 100 + cls_idx * 40, 80))
+                im.save(c_dir / f"{cls}_seed_{i:03d}.jpg")
+
+        # In-place ingestion (source_dir == target_dir)
+        record = audit_and_ingest_real_dataset(
+            source_dir=raw_dir,
+            target_dir=raw_dir,
+            splits_dir=splits_dir,
+            classes=classes,
+            copy_files=True,  # Should be automatically disabled in in-place mode
+            seed=42,
+            provenance_path=root / "provenance_real.json",
+        )
+
+        assert record["valid_images_retained"] == 10
+        assert (splits_dir / "train_manifest.csv").is_file()
+        assert (splits_dir / "provenance_real.json").is_file()
+
+        # Verify no nested duplicate files were created in raw_dir
+        for cls in classes:
+            files_in_cls = list((raw_dir / cls).glob("*.jpg"))
+            assert len(files_in_cls) == 5, f"Expected 5 files in {cls}, found {len(files_in_cls)}"
+
+        # Verify nesting rejection: passing a splits_dir inside raw_dir must raise ValueError
+        nested_splits = raw_dir / "nested_splits"
+        with pytest.raises(ValueError, match="nested inside or equal"):
+            audit_and_ingest_real_dataset(
+                source_dir=raw_dir,
+                target_dir=root / "staging_out",
+                splits_dir=nested_splits,
+                classes=classes,
+            )
+

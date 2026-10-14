@@ -93,8 +93,27 @@ def main():
         test_df=split_df,
     )
 
-    is_real = "real" in model_name.lower() or (args.splits_dir and "real" in str(args.splits_dir).lower())
-    print(f"Evaluation Mode: {'🌱 Genuine Real-World Test Set' if is_real else '🧪 Synthetic Calibration Fixtures'}")
+    from seedvision.evaluation.provenance_verifier import verify_evaluation_provenance
+
+    prov_verdict = verify_evaluation_provenance(
+        checkpoint_payload=payload,
+        splits_dir=splits_dir,
+        split_name=args.split,
+        expected_classes=classes,
+    )
+
+    is_real = prov_verdict["is_real_world_validated"]
+    eval_type = prov_verdict["evaluation_type"]
+    provenance_desc = prov_verdict["dataset_provenance"]
+    scientific_notice = prov_verdict["scientific_notice"]
+
+    if is_real:
+        print("Evaluation Provenance: [VERIFIED REAL-WORLD] Genuine human-reviewed pulse photography test set.")
+    elif eval_type == "synthetic_pipeline_verification":
+        print("Evaluation Provenance: [SYNTHETIC VERIFICATION] Procedural calibration fixtures.")
+    else:
+        print(f"Evaluation Provenance: [UNVERIFIED / CONTRADICTORY] {prov_verdict['verification_details']['reason']}")
+        print("  -> Scientific integrity notice: 'is_real_world_validated' flag is set to FALSE.")
 
     evaluator = ModelEvaluator(
         model=model,
@@ -102,6 +121,9 @@ def main():
         device=device,
         model_name=model_name,
         is_real_world_validated=is_real,
+        evaluation_type=eval_type,
+        dataset_provenance=provenance_desc,
+        scientific_notice=scientific_notice,
     )
 
     results = evaluator.evaluate(test_loader)

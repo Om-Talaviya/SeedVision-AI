@@ -87,6 +87,8 @@ class CheckpointManager:
             "normalization": normalization,
             "saved_at": datetime.now(timezone.utc).isoformat(),
             "parameters": model_info,
+            "is_real_world_trained": (extra_metadata or {}).get("is_real_world_trained", False),
+            "dataset_provenance": (extra_metadata or {}).get("dataset_provenance", "synthetic_procedural_fixture"),
         }
 
         # 1. Always save as last checkpoint

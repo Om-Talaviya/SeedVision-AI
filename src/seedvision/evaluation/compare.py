@@ -76,8 +76,12 @@ def compare_models(
     csv_path = m_dir / "model_comparison_summary.csv"
     df.to_csv(csv_path, index=False)
 
-    has_real = any(m.get("Evaluation Type") == "real_world_test_evaluation" for m in records)
-    all_real = all(m.get("Evaluation Type") == "real_world_test_evaluation" for m in records) if records else False
+    has_real = any(data.get("is_real_world_validated") is True for data in raw_models_data)
+    all_real = (
+        all(data.get("is_real_world_validated") is True for data in raw_models_data)
+        if raw_models_data
+        else False
+    )
 
     summary_dict = {
         "num_models_evaluated": len(df),
