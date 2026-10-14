@@ -64,6 +64,7 @@ def compare_models(
                     "Throughput (sample/s)": round(data.get("throughput_samples_per_sec", 0.0), 1),
                     "Total Params": f"{total_params / 1e6:.2f}M" if total_params >= 1e6 else f"{total_params:,}",
                     "Size (MB)": f"{size_mb:.2f} MB",
+                    "Evaluation Type": data.get("evaluation_type", "synthetic_pipeline_verification"),
                 }
             )
         except Exception as e:
@@ -77,6 +78,13 @@ def compare_models(
 
     summary_dict = {
         "num_models_evaluated": len(df),
+        "evaluation_type": "synthetic_pipeline_verification",
+        "dataset_provenance": "synthetic_procedural_fixture",
+        "is_real_world_validated": False,
+        "scientific_notice": (
+            "Metrics reflect software pipeline convergence on synthetic procedural fixtures. "
+            "Real-world agronomic performance is pending certified pulse dataset acquisition."
+        ),
         "models": records,
         "best_accuracy_model": df.sort_values(by="Accuracy (%)", ascending=False).iloc[0]["Model"]
         if not df.empty

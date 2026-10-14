@@ -190,6 +190,15 @@ def main():
         st.sidebar.warning("No checkpoints found. Train models via CLI or scripts.")
 
     st.sidebar.markdown("---")
+    st.sidebar.markdown(
+        """
+        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem; font-size: 0.8rem; color: #166534;">
+            <strong>🧪 SOFTWARE VERIFICATION MODE:</strong><br>
+            Loaded with 240 synthetic procedural fixtures. Real-world agronomic benchmarks pending certified field collection.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.sidebar.caption("SeedVision AI v1.0.0 | Academic & DLA Research Platform")
 
     # -------------------------------------------------------------
@@ -204,6 +213,12 @@ def main():
             </div>
             """,
             unsafe_allow_html=True,
+        )
+
+        st.info(
+            "🔬 **Software Verification Mode:** Current models are trained and evaluated on 240 procedural synthetic fixtures "
+            "to rigorously test tensor transformations, gradient hooks, and latency profiling. Real-world agricultural benchmarks "
+            "remain pending certified field pulse dataset collection."
         )
 
         col1, col2 = st.columns([1.8, 1.2])
@@ -453,6 +468,19 @@ def main():
             "Empirical performance metrics, confusion matrices, and calibration evaluation on held-out test datasets."
         )
 
+        st.markdown(
+            """
+            <div class="advisory-box">
+                <strong>🔬 SCIENTIFIC VALIDATION STATUS — SYNTHETIC CALIBRATION FIXTURES:</strong><br>
+                The 100.0% test accuracy shown below represents model convergence and linear separability on 
+                <strong>procedural synthetic calibration fixtures</strong> (36 test samples). It demonstrates that the backpropagation 
+                and feature extraction pipelines function correctly. This metric must <strong>NOT</strong> be interpreted as 
+                empirical real-world grading accuracy on physical farm crops. Real-data benchmarks are pending certified pulse image collection.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         metrics_dir = Path("artifacts/metrics")
         figures_dir = Path("artifacts/figures")
 
@@ -532,7 +560,7 @@ def main():
     elif page == "Methodology & Limitations":
         st.markdown("## 📖 Scientific Methodology & Research Principles")
 
-        tabs = st.tabs(["Agricultural Taxonomy", "Deep Learning Architectures", "Grad-CAM Derivation", "Limitations & Ethics"])
+        tabs = st.tabs(["Agricultural Taxonomy", "Deep Learning Architectures", "Grad-CAM Derivation", "Limitations & Ethics", "Dataset Provenance & Ingestion"])
 
         with tabs[0]:
             st.markdown("### Agricultural Seed Defect Taxonomy")
@@ -556,12 +584,12 @@ def main():
                   - Fully convolutional feature extraction with Adaptive Average Pooling and Dropout regularized linear head.
                 - **Transfer Learning (MobileNetV2)**:
                   - Inverted residual bottlenecks with depthwise separable convolutions.
-                  - ImageNet pre-trained representations fine-tuned with a lower learning rate ($3 \\times 10^{-4}$).
+                  - ImageNet pre-trained representations fine-tuned with a lower learning rate ($3 \times 10^{-4}$).
                   - Optimized for edge CPU deployment and mobile grading terminals.
                 - **Optimization Strategy**:
                   - Cross-entropy loss with label smoothing ($\epsilon = 0.05$).
                   - Cosine annealing learning rate scheduler with warm restarts.
-                  - Gradient clipping ($\\|g\\| \\le 1.0$) and Early Stopping ($patience = 6$).
+                  - Gradient clipping ($\|g\| \le 1.0$) and Early Stopping ($patience = 6$).
                 """
             )
 
@@ -594,6 +622,32 @@ def main():
                 </div>
                 """,
                 unsafe_allow_html=True,
+            )
+
+        with tabs[4]:
+            st.markdown("### Dataset Provenance & Real-Data Ingestion Protocol")
+            st.markdown(
+                """
+                #### Current Provenance Status
+                - **Current Images (data/raw):** 240 procedural synthetic fixtures (60/class).
+                - **Purpose:** Rigorous verification of software pipelines, PyTorch tensor transformations, Grad-CAM hooks, and latency benchmarking.
+                - **Real-World Agronomic Validation:** Currently pending empirical pulse collection from agricultural trial stations.
+                
+                #### Protocol for Ingesting Real Agricultural Photos
+                Researchers and laboratory technicians can plug in genuine seed photography datasets using the automated ingestion CLI:
+                1. Place physical seed images into `data/real_raw/<class_name>/` (`sound_healthy`, `discolored_spotted`, `broken_cracked`, `shrivelled_damaged`).
+                2. Run the ingestion command:
+                   ```bash
+                   python scripts/prepare_dataset.py --data-dir data/real_raw
+                   ```
+                3. Retrain and benchmark models:
+                   ```bash
+                   python scripts/train.py --config configs/cnn.yaml
+                   python scripts/train.py --config configs/transfer_learning.yaml
+                   python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_SeedNet-Baseline.pt
+                   ```
+                For detailed cryptographic hash analysis and split audits, consult `docs/DATASET_AUDIT.md`.
+                """
             )
 
 

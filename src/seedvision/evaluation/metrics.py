@@ -186,6 +186,13 @@ class ModelEvaluator:
                 "confidences": np.round(bin_confs, 4).tolist(),
                 "counts": bin_counts.tolist(),
             },
+            "evaluation_type": "synthetic_pipeline_verification",
+            "dataset_provenance": "synthetic_procedural_fixture",
+            "is_real_world_validated": False,
+            "scientific_notice": (
+                "Metrics demonstrate software pipeline convergence on synthetic procedural fixtures. "
+                "Real-world agronomic accuracy is pending certified agricultural pulse dataset acquisition."
+            ),
         }
 
         return evaluation_results

@@ -12,6 +12,14 @@
 - [x] 24/24 Automated pytest suite passing on CPU.
 - [x] Git repository initialization and commit history.
 
+## 🔬 Dataset Audit, Scientific Validation & Transparency (Completed ✅)
+- [x] Forensic dataset audit confirming 240 synthetic procedural fixtures (`docs/DATASET_AUDIT.md` & `data/provenance.json`).
+- [x] Cryptographic hash audit: 240 unique MD5 hashes, 0 duplicates, 0 split overlap across train/val/test partitions.
+- [x] 5 new automated unit tests in `tests/test_provenance.py` + MobileNetV2 Grad-CAM test (30/30 total tests passing).
+- [x] Separation of synthetic smoke-test verification from real-world empirical agronomic benchmarks in `README.md` and `docs/MODEL_EVALUATION.md`.
+- [x] Streamlit web application audit with research verification mode disclaimers and real-data ingestion protocol tab.
+- [x] Enriched evaluation artifacts (`artifacts/metrics/*.json`, `model_comparison_summary.csv`) with provenance and validation status.
+
 ---
 
 ## 🚀 Phase 2: Enhanced Computer Vision & Multi-Seed Processing (In Progress / Up Next)

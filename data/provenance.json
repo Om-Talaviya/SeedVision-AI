@@ -1,0 +1,31 @@
+{
+  "dataset_name": "SeedVision-Synthetic-Fixtures-v1",
+  "provenance_status": "synthetic_procedural_fixture",
+  "target_crop": "Chickpea (Cicer arietinum L.)",
+  "is_real_world_photograph": false,
+  "purpose": "Software pipeline verification, unit test fixtures, and smoke training",
+  "total_images": 240,
+  "classes": {
+    "sound_healthy": 60,
+    "discolored_spotted": 60,
+    "broken_cracked": 60,
+    "shrivelled_damaged": 60
+  },
+  "generation_method": "PIL procedural drawing with simulated geometric polygon jitter, laboratory tray background noise, defect contours, and deterministic seed indexing in scripts/prepare_dataset.py",
+  "image_specifications": {
+    "resolution": "128x128",
+    "color_space": "RGB",
+    "format": "JPEG",
+    "unique_md5_count": 240,
+    "exact_duplicates": 0
+  },
+  "splits": {
+    "train_count": 168,
+    "val_count": 36,
+    "test_count": 36,
+    "overlap_count": 0,
+    "splitting_method": "Class-stratified group split with seed 42"
+  },
+  "scientific_notice": "CRITICAL: This dataset consists of synthetic procedural fixtures. The 100% test accuracy obtained during training demonstrates neural network convergence on synthetic features, NOT real-world agronomic grading accuracy. Real-world agronomic validation is currently pending certified pulse dataset acquisition.",
+  "biological_boundary": "Optical RGB grading assesses surface physical morphology only and cannot determine physiological seed germination rate, internal embryo viability (e.g., Tetrazolium test), moisture percentage, or regulatory seed lot certification."
+}

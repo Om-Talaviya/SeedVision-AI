@@ -44,3 +44,19 @@ def test_gradcam_hook_cleanup():
     assert len(gradcam.handles) == 0
     assert gradcam.activations is None
     assert gradcam.gradients is None
+
+
+def test_gradcam_mobilenetv2_support():
+    from seedvision.models.transfer_learning import SeedTransferModel
+
+    model = SeedTransferModel(num_classes=4, pretrained=False)
+    target_layer = model.get_gradcam_target_layer()
+
+    with GradCAM(model, target_layer) as gradcam:
+        dummy_tensor = torch.randn(1, 3, 64, 64, requires_grad=True)
+        heatmap = gradcam.generate_heatmap(dummy_tensor, target_class_idx=2)
+
+        assert isinstance(heatmap, np.ndarray)
+        assert heatmap.shape == (64, 64)
+        assert 0.0 <= heatmap.min() <= heatmap.max() <= 1.0
+
