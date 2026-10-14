@@ -130,7 +130,7 @@ Both models were evaluated on the identical held-out synthetic test split (36 ba
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YourUsername/SeedVision-AI.git
+git clone https://github.com/Om-Talaviya/SeedVision-AI.git
 cd SeedVision-AI
 ```
 
@@ -175,10 +175,13 @@ python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_MobileNetV2-T
 python scripts/ingest_real_data.py --init-structure
 
 # 2. Ingest, deduplicate, and create leakage-resistant splits from real photos
-# (Place images in data/real_raw/<class_name>/ before running)
-python scripts/ingest_real_data.py --source-dir data/real_raw --splits-dir data/processed/splits_real --provenance-source "Trial Farm"
+# Option A: Ingest with an independent reviewed manifest (filters ambiguous_discard & low-confidence)
+python scripts/ingest_real_data.py --source-dir data/real_raw --splits-dir data/processed/splits_real --annotations data/real_raw/annotations.csv --provenance-source "Trial Farm Batch 2026"
 
-# 3. Train models on genuine training data
+# Option B: Ingest from class subdirectories directly
+python scripts/ingest_real_data.py --source-dir data/real_raw --splits-dir data/processed/splits_real --provenance-source "Trial Farm Batch 2026"
+
+# 3. Train models on genuine training data (isolated checkpoints with -Real suffix)
 python scripts/train.py --config configs/cnn.yaml --splits-dir data/processed/splits_real --name-suffix Real
 python scripts/train.py --config configs/transfer_learning.yaml --splits-dir data/processed/splits_real --name-suffix Real
 
@@ -208,47 +211,62 @@ pytest tests/ -v
 
 ```
 SeedVision-AI/
-├── app.py                     # Interactive Streamlit Web Application
-├── README.md                  # Comprehensive Project Documentation
-├── LICENSE                    # MIT Open-Source License
-├── CONTRIBUTING.md             # Developer Guidelines
-├── requirements.txt           # Pinned Dependencies
-├── pyproject.toml             # Packaging & Pytest Metadata
-├── .gitignore                 # Artifact & Cache Exclusions
-├── .env.example               # Environment Variables Template
-├── configs/                   # YAML Experiment Configurations
-│   ├── default.yaml           # Base parameters & dataset paths
-│   ├── cnn.yaml               # Custom CNN architecture config
-│   └── transfer_learning.yaml # MobileNetV2 transfer learning config
-├── data/                      # Dataset Repositories
-│   ├── README.md              # Quality grading specifications
-│   ├── raw/                   # Raw images organized by class
-│   └── processed/             # Splits & manifest CSVs
-├── docs/                      # Scientific Documentation
-│   ├── PROJECT_OVERVIEW.md    # College semester project overview
-│   ├── DATASET_GUIDE.md       # Annotation & photography guide
-│   ├── METHODOLOGY.md         # Deep learning & XAI equations
-│   ├── MODEL_EVALUATION.md    # Evaluation protocols & metrics
-│   ├── LIMITATIONS.md         # Responsible AI & testing boundaries
-│   └── PRESENTATION_GUIDE.md  # Viva questions & presentation slides
-├── src/seedvision/            # Core Python Source Package
-│   ├── config.py              # Strong-typed YAML loader
-│   ├── data/                  # Validation, splitting, transforms, dataset
-│   ├── models/                # Custom CNN, MobileNetV2, Factory
-│   ├── training/              # Trainer, Early Stopping, Checkpoints
-│   ├── evaluation/            # Metrics, Plots, Benchmarking
-│   ├── explainability/        # Grad-CAM engine & overlay blending
-│   └── inference/             # Predictor & Upload Validator
-├── scripts/                   # Executable CLI Workflows
-│   ├── prepare_dataset.py     # Dataset discovery, validation & split
-│   ├── train.py               # Model training coordinator
-│   ├── evaluate.py            # Held-out test evaluation & plots
-│   └── predict.py             # Single-image prediction & Grad-CAM
-├── artifacts/                 # Generated Outputs (Checkpoints, Metrics, Plots)
-│   ├── checkpoints/           # Trained PyTorch .pt weights
-│   ├── metrics/               # Evaluation JSONs & CSV summaries
-│   └── figures/               # Confusion matrices, curves & overlays
-└── tests/                     # Automated Pytest Suite
+├── app.py                             # Interactive Streamlit Web Laboratory
+├── README.md                          # Comprehensive Project Documentation
+├── AGENTS.md                          # Architecture guidelines & agent specifications
+├── TODO.md                            # Project roadmap and milestone tracker
+├── LICENSE                            # MIT Open-Source License
+├── CONTRIBUTING.md                     # Open-source contribution guidelines
+├── requirements.txt                   # Pinned Dependencies
+├── pyproject.toml                     # Packaging & Pytest Metadata
+├── .gitignore                         # Artifact, cache, and large dataset exclusions
+├── .env.example                       # Environment Variables Template
+├── .github/workflows/tests.yml        # Automated CI test suite workflow
+├── configs/                           # Strong-typed YAML Experiment Configurations
+│   ├── default.yaml                   # Base parameters & dataset paths
+│   ├── cnn.yaml                       # Custom CNN architecture config
+│   └── transfer_learning.yaml         # MobileNetV2 transfer learning config
+├── data/                              # Dataset Repositories
+│   ├── README.md                      # Quality grading specifications
+│   ├── raw/                           # Procedural synthetic fixtures (verification)
+│   ├── real_raw/                      # Staging for genuine pulse photographs
+│   ├── processed/                     # Leakage-resistant manifest CSVs
+│   └── provenance.json                # Cryptographic audit and dataset records
+├── docs/                              # Comprehensive Technical Documentation
+│   ├── PRD.md                         # Product Requirements Document
+│   ├── TRD.md                         # Technical Requirements Document
+│   ├── ARCHITECTURE.md                # System component interactions & pipelines
+│   ├── CHANGELOG.md                   # Engineering changelog & version history
+│   ├── REAL_DATA_ACQUISITION_WORKFLOW.md # Protocol: statutory vs operational CV rules
+│   ├── DATASET_AUDIT.md               # Forensic hash audit & zero-leakage verification
+│   ├── DATASET_GUIDE.md               # Annotation, photography & taxonomy guide
+│   ├── MODEL_EVALUATION.md            # Scientific benchmarking & calibration protocol
+│   ├── METHODOLOGY.md                 # Mathematical formulation & Grad-CAM derivation
+│   ├── LIMITATIONS.md                 # Scientific boundary & non-viability disclosures
+│   ├── PRESENTATION_GUIDE.md          # Viva presentation guide & defense Q&A
+│   ├── PROJECT_OVERVIEW.md            # Academic overview & system description
+│   ├── backend-schema.md              # Ingestion & split manifest schema
+│   ├── decisions.md                   # Architectural Decision Records (ADRs)
+│   └── flow.md                        # Sequence diagrams & data flow graphs
+├── src/seedvision/                    # Core Python Source Package
+│   ├── config.py                      # Strong-typed YAML loader
+│   ├── data/                          # Ingestion, validation, splitting, transforms
+│   ├── models/                        # Custom CNN, MobileNetV2, Model Factory
+│   ├── training/                      # Trainer, Early Stopping, Checkpoints
+│   ├── evaluation/                    # Metrics, Calibration (ECE), Plots, Benchmarks
+│   ├── explainability/                # Grad-CAM engine & overlay blending
+│   └── inference/                     # Predictor & Upload Validator
+├── scripts/                           # Executable CLI Workflows
+│   ├── prepare_dataset.py             # Synthetic fixture generator & split builder
+│   ├── ingest_real_data.py            # Real photo audit, deduplication & splitting
+│   ├── train.py                       # Model training coordinator
+│   ├── evaluate.py                    # Held-out test evaluation & plots
+│   └── predict.py                     # Single-image prediction & Grad-CAM CLI
+├── artifacts/                         # Generated Outputs (Checkpoints, Metrics, Plots)
+│   ├── checkpoints/                   # Trained PyTorch .pt weights
+│   ├── metrics/                       # Evaluation JSONs & CSV summaries
+│   └── figures/                       # Confusion matrices, curves & overlays
+└── tests/                             # Automated Pytest Suite (38 unit tests)
 ```
 
 ---
@@ -257,10 +275,10 @@ SeedVision-AI/
 If you use SeedVision AI in academic coursework or pulse quality research, please cite:
 ```bibtex
 @misc{seedvision2026,
-  author = {SeedVision AI Team},
+  author = {Om Talaviya},
   title = {SeedVision AI: Deep Learning-Based Agricultural Seed Quality Grader with Grad-CAM Attribution},
   year = {2026},
   publisher = {GitHub},
-  howpublished = {\url{https://github.com/YourUsername/SeedVision-AI}}
+  howpublished = {\url{https://github.com/Om-Talaviya/SeedVision-AI}}
 }
 ```

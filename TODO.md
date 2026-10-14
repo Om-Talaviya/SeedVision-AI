@@ -24,9 +24,12 @@
 - [x] Exhaustive search of public pulse datasets (Mendeley `PulseLibrary`, GitHub `TRCS_8_SET`, `SOYPR`, Kaggle).
 - [x] Verification finding: public chickpea datasets categorize by species or variety, not by 4-class physical defect quality.
 - [x] Automated genuine seed photography ingestion pipeline in `scripts/ingest_real_data.py` (integrity checks, MD5 & aHash deduplication, leakage-resistant group splitting).
+- [x] Independent annotation manifest ingestion (`annotations.csv`) with automatic exclusion of `ambiguous_discard` and low-confidence entries.
+- [x] Statutory standards review: explicitly delineated AGMARK India & USDA GIPSA bulk lot mass tolerances from project-defined single-seed operational CV proxies.
+- [x] Evaluator provenance tagging: automatic dynamic isolation of real-world test evaluation metrics (`eval_*-Real.json`) from synthetic fixtures.
 - [x] Directory scaffold and annotation guide initialized under `data/real_raw/` with `annotations_template.csv`.
 - [x] Added `--splits-dir` and `--name-suffix` flags to `scripts/train.py` and `scripts/evaluate.py` for decoupled real-data training.
-- [x] 3 new unit tests in `tests/test_real_data_ingestion.py` (33/33 total tests passing).
+- [x] 8 specialized real-data unit tests in `tests/test_real_data_ingestion.py` (38/38 total tests passing).
 - [ ] User/Researcher upload of physical chickpea photos into `data/real_raw/` for final real-data benchmark execution.
 
 ---

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-10-14
+
+### Added
+- **Final Pre-Training Audit & Statutory Standards Review**:
+  - Delineated official agricultural grain inspection standards (AGMARK India Pulses Rules 2004, USDA GIPSA Garbanzo Bean Standards) based on bulk sample weight percentages from project-defined single-seed operational CV proxies (1.5mm crack, 5% necrotic area).
+  - Documented independent dual-annotator scoring protocol, Cohen's Kappa target ($\kappa \ge 0.85$), and Senior Agronomist arbitration in `docs/REAL_DATA_ACQUISITION_WORKFLOW.md`.
+- **Independent Annotation Manifest Ingestion (`annotations.csv`)**:
+  - Added support for `--annotations` in `scripts/ingest_real_data.py`, enabling strict ingestion of human-reviewed annotations.
+  - Implemented automatic exclusion of `ambiguous_discard` labels and low-confidence entries from training/validation/test splits.
+  - Implemented strict filtering of unreviewed images on disk to prevent unlabeled data leakage.
+  - Grouped multi-view captures sharing identical `seed_id` across distinct filenames into the same partition.
+- **Evaluation Provenance Isolation**:
+  - Parameterized `ModelEvaluator` and `scripts/evaluate.py` to auto-tag real-data evaluation runs (`evaluation_type: real_world_test_evaluation`, `is_real_world_validated: True`).
+  - Updated `compare_models` and `app.py` to render distinct green status badges for genuine real-world evaluations and blue badges for synthetic verification fixtures.
+- **Automated Regression Suite Expansion**:
+  - Added 5 new unit tests in `tests/test_real_data_ingestion.py` covering `annotations.csv` ingestion, ambiguous discard filtering, unreviewed image skipping, and evaluator metadata isolation (38/38 tests passing).
+- **GitHub Publication Preparation**:
+  - Configured repository metadata, GitHub Actions CI workflow, and verified zero secret leakage.
+
+---
+
 ## [1.2.0] - 2026-10-14
 
 ### Added
