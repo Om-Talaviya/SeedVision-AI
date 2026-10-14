@@ -10,6 +10,36 @@
 
 ---
 
+## 📖 Project Description
+
+**SeedVision AI** is an open-source, end-to-end Deep Learning Applications (DLA) computer vision system engineered for the automated visual quality grading of agricultural pulses (specifically chickpea seeds, *Cicer arietinum L.*).
+
+In grain procurement, seed testing laboratories, and post-harvest milling, seed lots must be sorted to separate intact, market-grade pulses from defective, diseased, mechanically broken, or insect-damaged seeds. Conventional inspection relies on subjective, fatigue-prone visual estimation under manual lighting. SeedVision AI addresses this through:
+
+1. **Automated Defect Categorization**: Classifies single-seed macro photographs into 4 standard quality grades: `sound_healthy`, `discolored_spotted`, `broken_cracked`, and `shrivelled_damaged`.
+2. **Dual Deep Learning Benchmarking**: Rigorously compares an edge-optimized custom convolutional network (**SeedNet-Baseline**) against an ImageNet-pretrained transfer learning candidate (**MobileNetV2**).
+3. **Transparent Explainable AI (Grad-CAM)**: Generates localized spatial attribution heatmaps highlighting exactly which visual defect regions (cotyledon fissures, necrotic fungal lesions, or wrinkled testa folds) triggered the model's prediction.
+4. **Scientific Provenance & Rigor**: Enforces multi-gate evaluation verification, leakage-free group-aware splitting (preventing multiple views of the same physical seed from crossing train/test splits), and honest distinction between software pipeline verification on synthetic fixtures and real-world agronomic validation.
+5. **Interactive Research Laboratory**: Features a modern 4-tab Streamlit web application providing live single-seed image diagnosis, real-time Grad-CAM visualization, cross-model metric dashboards, and interactive reliability diagrams.
+
+### 📋 Technical Specifications at a Glance
+
+| Attribute | Specification |
+| :--- | :--- |
+| **Application Domain** | Agricultural Deep Learning / Computer Vision Seed Quality Grading |
+| **Crop Studied** | Grain Legumes — Chickpea (*Cicer arietinum L.*), Desi & Kabuli varieties |
+| **Quality Taxonomy** | 4 Classes: `sound_healthy`, `discolored_spotted`, `broken_cracked`, `shrivelled_damaged` |
+| **Core Frameworks** | PyTorch 2.2+, Torchvision, OpenCV, Scikit-Learn, SciPy, Pillow, NumPy, Pandas |
+| **Model Architectures** | • **SeedNet-Baseline**: Custom 4-stage CNN (0.46M params, 5.72 ms CPU latency)<br>• **MobileNetV2**: Transfer learning with inverted residual bottlenecks (2.39M params) |
+| **Explainable AI** | Native Grad-CAM attribution at final convolutional feature maps with alpha blending |
+| **Reliability & ECE** | Uncertainty warning for confidence $<50\%$; Expected Calibration Error ($\text{ECE} = 0.0251$) |
+| **User Interface** | Interactive Streamlit Web Laboratory (`app.py`) running on `http://localhost:8501` |
+| **Test Suite** | 42 automated pytest test cases (100% passing, 73% package statement coverage) |
+| **Provenance Verifier** | Multi-gate cryptographic and metadata gate preventing false real-world claims |
+| **Hardware Requirement** | 100% CPU compatible (Intel/AMD/Apple Silicon); CUDA acceleration auto-detected |
+
+---
+
 ## 📌 Abstract
 Physical grading of agricultural seeds is essential for market valuation, export compliance, and food processing suitability. Conventional grading relies on subjective, fatigue-prone manual visual inspection. **SeedVision AI** implements an end-to-end explainable computer vision framework that evaluates single-seed images of grain legumes (specifically chickpea pulses, *Cicer arietinum L.*). The system evaluates two distinct deep learning architectures—a custom baseline CNN (**SeedNet-Baseline**) and an ImageNet fine-tuned **MobileNetV2**—across four physical quality categories: `sound_healthy`, `discolored_spotted`, `broken_cracked`, and `shrivelled_damaged`. Predictions are interpreted using **Gradient-weighted Class Activation Mapping (Grad-CAM)** and presented through a research-grade **Streamlit web application**.
 
