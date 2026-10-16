@@ -3,6 +3,7 @@
 Streamlit Web Application for interactive inference, explainability, and evaluation.
 """
 
+from datetime import datetime
 from pathlib import Path
 import sys
 import numpy as np
@@ -15,6 +16,15 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 from seedvision.config import load_config
+from seedvision.data.real_review import (
+    ALLOWED_CONFIDENCES,
+    ALLOWED_REVIEW_STATUSES,
+    ALLOWED_TARGET_LABELS,
+    load_staging_manifest,
+    restore_manifest_backup,
+    revert_specimen_review,
+    save_specimen_review,
+)
 from seedvision.evaluation.compare import compare_models
 from seedvision.inference.predictor import (
     SCIENTIFIC_LIMITATION_NOTICE,
@@ -31,76 +41,192 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS for Modern Laboratory & Research Aesthetic
+# Custom CSS for Modern Laboratory & Research Aesthetic (WCAG 2.1 AA Compliant)
 st.markdown(
     """
     <style>
-    /* Main Theme Variables */
+    /* Main Theme Variables & Adaptive Semantic Tokens */
     :root {
         --primary-green: #2e7d32;
         --dark-green: #1b5e20;
         --light-green: #e8f5e9;
         --accent-gold: #f9a825;
-        --card-bg: #ffffff;
-        --text-primary: #1e293b;
-        --text-muted: #64748b;
         --border-color: #e2e8f0;
+        --text-muted: #64748b;
     }
 
-    /* Overall Container */
+    /* Streamlit Container & Base Typography */
     .stApp {
-        background-color: #f8fafc;
-        color: var(--text-primary);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* Sidebar Styling */
+    /* Top Header & Spacing Optimization */
+    header[data-testid="stHeader"] {
+        height: 2.25rem !important;
+        background: transparent !important;
+        pointer-events: none;
+    }
+
+    header[data-testid="stHeader"] * {
+        pointer-events: auto;
+    }
+
+    /* Hide distracting Deploy button without affecting hamburger menu or controls */
+    [data-testid="stDeployButton"] {
+        display: none !important;
+    }
+
+    /* Main Content Top Spacing Optimization - Eliminates 6rem blank space */
+    .block-container,
+    [data-testid="stMainBlockContainer"] {
+        padding-top: 1.5rem !important;
+        padding-bottom: 3.5rem !important;
+    }
+
+    /* Top Headings Spacing on Secondary Pages */
+    [data-testid="stMainBlockContainer"] > div:first-child h2 {
+        margin-top: 0 !important;
+    }
+
+    /* Sidebar Container */
     section[data-testid="stSidebar"] {
-        background-color: #ffffff;
-        border-right: 1px solid var(--border-color);
+        border-right: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    /* Sidebar Headings & Text with High Accessible Contrast */
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 {
+        color: var(--text-color, #0f172a) !important;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+    }
+
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] span,
+    section[data-testid="stSidebar"] label {
+        color: var(--text-color, #1e293b);
+    }
+
+    /* Navigation Radio Group - High Accessible Contrast */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] > label {
+        color: var(--text-color, #0f172a) !important;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label {
+        color: var(--text-color, #1e293b) !important;
+        font-size: 0.92rem;
+        font-weight: 500;
+        padding: 0.4rem 0.65rem;
+        border-radius: 6px;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label span {
+        color: var(--text-color, #1e293b) !important;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:hover {
+        background-color: rgba(46, 125, 50, 0.08);
+    }
+
+    /* Selected Navigation Radio Item */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) {
+        background-color: rgba(46, 125, 50, 0.12);
+        color: var(--primary-green, #2e7d32) !important;
+        font-weight: 600;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] div[role="radiogroup"] label:has(input:checked) span {
+        color: var(--primary-green, #2e7d32) !important;
+        font-weight: 600;
+    }
+
+    /* Sidebar Code Tags & Checkpoints */
+    section[data-testid="stSidebar"] code {
+        background-color: rgba(46, 125, 50, 0.08);
+        color: var(--text-color, #1e293b);
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 600;
+        border: 1px solid rgba(46, 125, 50, 0.2);
+    }
+
+    /* Sidebar Tags & Notice Box */
+    .sidebar-tag-real {
+        color: #166534;
+        font-weight: 600;
+    }
+    .sidebar-tag-synth {
+        color: #0369a1;
+        font-weight: 600;
+    }
+
+    .sidebar-notice-box {
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #166534;
     }
 
     /* Hero Header Card */
     .hero-card {
         background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
         color: white;
-        padding: 2.2rem 2.5rem;
+        padding: 1.75rem 2.25rem;
         border-radius: 12px;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(27, 94, 32, 0.12);
+        margin-top: 0 !important;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(27, 94, 32, 0.15);
     }
     .hero-card h1 {
         color: white !important;
-        font-size: 2.2rem;
+        font-size: 2.1rem;
         font-weight: 700;
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 0.4rem 0;
         letter-spacing: -0.5px;
     }
     .hero-card p {
         color: #e8f5e9;
-        font-size: 1.05rem;
+        font-size: 1.02rem;
         margin: 0;
         max-width: 800px;
         line-height: 1.5;
     }
 
-    /* Metric & Feature Cards */
+    /* Metric & Feature Cards - Adaptive Secondary Background */
     .feature-card {
-        background-color: white;
-        border: 1px solid var(--border-color);
+        background-color: var(--secondary-background-color, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
         border-radius: 10px;
         padding: 1.4rem;
         margin-bottom: 1rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        color: var(--text-color, #1e293b);
     }
     .feature-card h3 {
-        color: var(--dark-green);
+        color: var(--primary-green, #2e7d32) !important;
         margin-top: 0;
         font-size: 1.15rem;
         font-weight: 600;
     }
+    .feature-card-desc {
+        margin: 0.5rem 0 0 0;
+        font-size: 0.9rem;
+        color: var(--text-color, #475569);
+        opacity: 0.88;
+        line-height: 1.5;
+    }
 
-    /* Quality Class Badges */
+    /* Quality Class Badges - Explicit Accessible Contrast */
     .badge {
         display: inline-block;
         padding: 0.35rem 0.8rem;
@@ -109,12 +235,15 @@ st.markdown(
         font-weight: 600;
         margin-right: 0.5rem;
     }
-    .badge-healthy { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .badge-spotted { background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
-    .badge-cracked { background-color: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
-    .badge-shrivelled { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-healthy { background-color: #dcfce7; color: #166534 !important; border: 1px solid #bbf7d0; }
+    .badge-spotted { background-color: #fef9c3; color: #854d0e !important; border: 1px solid #fef08a; }
+    .badge-cracked { background-color: #ffedd5; color: #9a3412 !important; border: 1px solid #fed7aa; }
+    .badge-shrivelled { background-color: #fee2e2; color: #991b1b !important; border: 1px solid #fecaca; }
+    .badge-approved { background-color: #dcfce7; color: #166534 !important; border: 1px solid #bbf7d0; }
+    .badge-pending { background-color: #fef9c3; color: #854d0e !important; border: 1px solid #fef08a; }
+    .badge-rejected { background-color: #fee2e2; color: #991b1b !important; border: 1px solid #fecaca; }
 
-    /* Advisory Box */
+    /* Advisory & Limitation Boxes */
     .advisory-box {
         background-color: #fffbeb;
         border-left: 4px solid #f59e0b;
@@ -124,22 +253,120 @@ st.markdown(
         color: #92400e;
         font-size: 0.92rem;
     }
-
-    /* Scientific Disclaimer Box */
     .scientific-disclaimer {
-        background-color: #f1f5f9;
-        border-left: 4px solid #64748b;
-        padding: 0.9rem 1.1rem;
+        background-color: var(--secondary-background-color, #f1f5f9);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-left-width: 4px;
+        border-left-color: #2e7d32;
+        padding: 1rem 1.2rem;
         border-radius: 6px;
         margin-top: 1.5rem;
-        color: #475569;
+        color: var(--text-color, #334155);
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    /* Benchmark Notice Cards */
+    .benchmark-notice-real {
+        background-color: #f0fdf4;
+        border: 1px solid #86efac;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        color: #166534;
+    }
+    .benchmark-notice-unverified {
+        background-color: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        color: #92400e;
+    }
+    .benchmark-notice-synthetic {
+        background-color: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        color: #0369a1;
+    }
+    .safeguard-notice {
         font-size: 0.85rem;
-        line-height: 1.45;
+        color: var(--text-muted, #64748b);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Dark Mode Adaptive Overrides */
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --border-color: #334155;
+            --text-muted: #94a3b8;
+        }
+        section[data-testid="stSidebar"] {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-notice-box {
+            background-color: rgba(46, 125, 50, 0.2);
+            border: 1px solid rgba(46, 125, 50, 0.4);
+            color: #86efac;
+        }
+        .sidebar-tag-real {
+            color: #4ade80;
+        }
+        .sidebar-tag-synth {
+            color: #38bdf8;
+        }
+        .advisory-box {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: #fde68a;
+        }
+        .scientific-disclaimer {
+            background-color: rgba(30, 41, 59, 0.6);
+            color: #e2e8f0;
+        }
+        .benchmark-notice-real {
+            background-color: rgba(22, 101, 52, 0.2);
+            border-color: rgba(134, 239, 172, 0.4);
+            color: #86efac;
+        }
+        .benchmark-notice-unverified {
+            background-color: rgba(146, 64, 14, 0.2);
+            border-color: rgba(253, 230, 138, 0.4);
+            color: #fde68a;
+        }
+        .benchmark-notice-synthetic {
+            background-color: rgba(3, 105, 161, 0.2);
+            border-color: rgba(186, 230, 253, 0.4);
+            color: #7dd3fc;
+        }
+        section[data-testid="stSidebar"] code {
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+    }
+
+    /* Responsive Viewport Spacing (Mobile & Tablet) */
+    @media (max-width: 768px) {
+        .block-container,
+        [data-testid="stMainBlockContainer"] {
+            padding-top: 1.25rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        .hero-card {
+            padding: 1.35rem 1.4rem;
+            margin-bottom: 1.25rem;
+        }
+        .hero-card h1 {
+            font-size: 1.6rem;
+        }
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
 
 
 @st.cache_resource
@@ -173,6 +400,7 @@ def main():
         [
             "Home & Overview",
             "Seed Quality Analysis",
+            "Real Data Staging Review",
             "Model Evaluation & Benchmark",
             "Methodology & Limitations",
         ],
@@ -196,14 +424,15 @@ def main():
                 except Exception:
                     pass
             tag = "🌱 Real-Data" if is_real_trained else "🧪 Synthetic"
-            st.sidebar.markdown(f"- `{cp.name}` <small style='color: {'#166534' if is_real_trained else '#0369a1'};'>({tag})</small>", unsafe_allow_html=True)
+            tag_class = "sidebar-tag-real" if is_real_trained else "sidebar-tag-synth"
+            st.sidebar.markdown(f"- `{cp.name}` <span class='{tag_class}'>({tag})</span>", unsafe_allow_html=True)
     else:
         st.sidebar.warning("No checkpoints found. Train models via CLI or scripts.")
 
     st.sidebar.markdown("---")
     st.sidebar.markdown(
         """
-        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem; font-size: 0.8rem; color: #166534;">
+        <div class="sidebar-notice-box">
             <strong>🧪 SOFTWARE VERIFICATION MODE:</strong><br>
             Loaded with 240 synthetic procedural fixtures. Real-world agronomic benchmarks pending certified field collection.
         </div>
@@ -265,25 +494,25 @@ def main():
                 """
                 <div class="feature-card">
                     <span class="badge badge-healthy">sound_healthy</span>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #475569;">
+                    <p class="feature-card-desc">
                         Intact seed coat, characteristic angular-spherical chickpea morphology, uniform pigmentation, zero visible lesions.
                     </p>
                 </div>
                 <div class="feature-card">
                     <span class="badge badge-spotted">discolored_spotted</span>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #475569;">
+                    <p class="feature-card-desc">
                         Surface fungal spots, necrotic lesions, moisture discoloration, or dark weathered seed coat patches.
                     </p>
                 </div>
                 <div class="feature-card">
                     <span class="badge badge-cracked">broken_cracked</span>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #475569;">
+                    <p class="feature-card-desc">
                         Mechanical fracture lines, split cotyledons, or severed outer testa caused by mechanical threshing.
                     </p>
                 </div>
                 <div class="feature-card">
                     <span class="badge badge-shrivelled">shrivelled_damaged</span>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #475569;">
+                    <p class="feature-card-desc">
                         Immature or insect-punctured grains, wrinkled non-convex morphology, or hollowed seed mass.
                     </p>
                 </div>
@@ -452,15 +681,15 @@ def main():
 
             cam_col1, cam_col2, cam_col3 = st.columns(3)
             with cam_col1:
-                st.image(target_image, caption="1. Original Seed Image", use_container_width=True)
+                st.image(target_image, caption="1. Original Seed Image", width="stretch")
             with cam_col2:
                 if res.colored_heatmap_rgb is not None:
-                    st.image(res.colored_heatmap_rgb, caption="2. Grad-CAM Activation Heatmap", use_container_width=True)
+                    st.image(res.colored_heatmap_rgb, caption="2. Grad-CAM Activation Heatmap", width="stretch")
                 else:
                     st.warning(res.gradcam_error or "Heatmap unavailable.")
             with cam_col3:
                 if res.overlay_rgb is not None:
-                    st.image(res.overlay_rgb, caption="3. Blended Decision Overlay", use_container_width=True)
+                    st.image(res.overlay_rgb, caption="3. Blended Decision Overlay", width="stretch")
                 else:
                     st.warning(res.gradcam_error or "Overlay unavailable.")
 
@@ -469,6 +698,244 @@ def main():
                 f"the network scoring this seed as '{res.gradcam_target_class}'. Grad-CAM highlights associative feature correlations; "
                 "it does not verify biochemical seed viability."
             )
+
+    # -------------------------------------------------------------
+    # PAGE: REAL DATA STAGING REVIEW
+    # -------------------------------------------------------------
+    elif page == "Real Data Staging Review":
+        st.markdown("## 🔍 Real Data Staging Review & Specimen Verification")
+        st.write(
+            "Inspect incoming high-resolution seed photographs grouped by physical specimen, "
+            "review multi-view angles (dorsal, ventral, lateral), and assign consistent, verified labels."
+        )
+
+        staging_manifest_path = Path("data/real_staging/staging_manifest.csv")
+        incoming_dir = Path("data/real_staging/incoming")
+
+        if not staging_manifest_path.is_file():
+            st.warning(
+                f"Staging manifest not found at `{staging_manifest_path}`. "
+                "Run `python scripts/stage_real_intake.py` to stage incoming photography."
+            )
+            return
+
+        try:
+            staging_data = load_staging_manifest(staging_manifest_path, incoming_dir)
+        except Exception as exc:
+            st.error(f"Error loading staging manifest: {exc}")
+            return
+
+        # Summary Metrics
+        m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+        with m_col1:
+            st.metric("Total Specimens", staging_data["total_specimens"])
+        with m_col2:
+            st.metric("Total Photographic Views", staging_data["total_views"])
+        with m_col3:
+            approved_count = staging_data["status_counts"].get("approved", 0)
+            st.metric("Approved Views", approved_count)
+        with m_col4:
+            pending_count = staging_data["status_counts"].get("pending", 0)
+            st.metric("Pending Views", pending_count)
+
+        if staging_data["missing_images"]:
+            st.error(f"⚠️ Warning: Missing {len(staging_data['missing_images'])} image file(s) on disk: {staging_data['missing_images']}")
+
+        specimens = staging_data["specimens"]
+        if not specimens:
+            st.info("No specimens found in staging manifest.")
+            return
+
+        st.markdown("---")
+        st.markdown("### 1. Select Physical Specimen")
+
+        specimen_ids = list(specimens.keys())
+        specimen_options = []
+        for sid in specimen_ids:
+            s_info = specimens[sid]
+            status_tag = s_info["review_status"].upper()
+            label_tag = s_info["candidate_label"]
+            n_views = len(s_info["views"])
+            specimen_options.append((sid, f"{sid} — [{status_tag}] Label: {label_tag} ({n_views} views)"))
+
+        selected_sid = st.selectbox(
+            "Choose Specimen to Inspect",
+            specimen_ids,
+            format_func=lambda sid: next(desc for s_id, desc in specimen_options if s_id == sid),
+            key="specimen_selector",
+        )
+
+        active_specimen = specimens[selected_sid]
+
+        # Specimen Overview Card
+        st.markdown(
+            f"""
+            <div class="feature-card">
+                <h3>Specimen Information: <code>{selected_sid}</code></h3>
+                <p>
+                    <strong>Variety:</strong> {active_specimen.get('variety') or 'N/A'} &nbsp;|&nbsp;
+                    <strong>Provenance:</strong> {active_specimen.get('source_provenance') or 'N/A'}<br>
+                    <strong>Current Status:</strong> <span class="badge badge-{active_specimen['review_status']}">{active_specimen['review_status'].upper()}</span> &nbsp;|&nbsp;
+                    <strong>Current Label:</strong> <code>{active_specimen['candidate_label']}</code> &nbsp;|&nbsp;
+                    <strong>Confidence:</strong> <code>{active_specimen.get('confidence') or 'unassigned'}</code><br>
+                    <strong>Assigned Reviewer:</strong> {active_specimen.get('reviewer') or 'None'} &nbsp;|&nbsp;
+                    <strong>Notes:</strong> {active_specimen.get('diagnostic_notes') or 'None'}
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # Multi-View Photographic Gallery
+        st.markdown("### 2. Multi-View Specimen Gallery (All Angles)")
+        st.caption("All photographic views of the physical specimen are evaluated together to prevent single-angle misclassification.")
+
+        views = active_specimen["views"]
+        view_cols = st.columns(len(views) if views else 1)
+
+        for idx, view in enumerate(views):
+            with view_cols[idx]:
+                st.markdown(f"**View:** `{view['view_id']}`")
+                if view["image_exists"] and view["image_path"]:
+                    try:
+                        img = Image.open(view["image_path"])
+                        st.image(img, caption=f"{view['filename']} ({view['width']}×{view['height']} px)", width="stretch")
+                    except Exception as err:
+                        st.error(f"Failed to render image: {err}")
+                else:
+                    st.error(f"Missing image on disk: `{view['filename']}`")
+
+        # Review Form
+        st.markdown("### 3. Human Review & Verification Decision")
+        st.caption("Apply consistent specimen-level classification across all photographic views.")
+
+        with st.form(key=f"review_form_{selected_sid}"):
+            f_col1, f_col2, f_col3 = st.columns(3)
+
+            with f_col1:
+                cur_label = active_specimen["candidate_label"]
+                default_label_idx = (
+                    ALLOWED_TARGET_LABELS.index(cur_label)
+                    if cur_label in ALLOWED_TARGET_LABELS
+                    else ALLOWED_TARGET_LABELS.index("pending_review")
+                )
+                chosen_label = st.selectbox(
+                    "Target Defect Label",
+                    ALLOWED_TARGET_LABELS,
+                    index=default_label_idx,
+                    help="Defect label to assign consistently to all views of this seed.",
+                )
+
+            with f_col2:
+                cur_status = active_specimen["review_status"]
+                default_status_idx = (
+                    ALLOWED_REVIEW_STATUSES.index(cur_status)
+                    if cur_status in ALLOWED_REVIEW_STATUSES
+                    else ALLOWED_REVIEW_STATUSES.index("pending")
+                )
+                chosen_status = st.selectbox(
+                    "Review Status",
+                    ALLOWED_REVIEW_STATUSES,
+                    index=default_status_idx,
+                    help="Approval state. Uncertain samples must stay 'pending'.",
+                )
+
+            with f_col3:
+                cur_conf = active_specimen.get("confidence") or "high"
+                default_conf_idx = (
+                    ALLOWED_CONFIDENCES.index(cur_conf)
+                    if cur_conf in ALLOWED_CONFIDENCES
+                    else 0
+                )
+                chosen_confidence = st.selectbox(
+                    "Reviewer Confidence",
+                    ALLOWED_CONFIDENCES,
+                    index=default_conf_idx,
+                    help="If confidence is 'low', status will remain pending.",
+                )
+
+            r_col1, r_col2 = st.columns([1, 2])
+            with r_col1:
+                reviewer_input = st.text_input(
+                    "Reviewer Identity",
+                    value=active_specimen.get("reviewer") or "",
+                    placeholder="e.g. Dr. Agronomist / reviewer_01",
+                    help="Required when approving a specimen.",
+                )
+            with r_col2:
+                notes_input = st.text_area(
+                    "Diagnostic Morphological Notes",
+                    value=active_specimen.get("diagnostic_notes") or "",
+                    placeholder="Describe visible testa integrity, discoloration patches, cracking, or damage...",
+                    help="Required when approving or rejecting a specimen.",
+                )
+
+            st.markdown(
+                """
+                <div class="safeguard-notice">
+                    🛡️ <strong>Safety Safeguards:</strong> A backup of the manifest is automatically created before any modification.
+                    Uncertain specimens with low confidence will remain pending.
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            submit_btn = st.form_submit_button("💾 Save Specimen Review Decision", use_container_width=True)
+
+        if submit_btn:
+            try:
+                result = save_specimen_review(
+                    manifest_path=staging_manifest_path,
+                    specimen_id=selected_sid,
+                    candidate_label=chosen_label,
+                    review_status=chosen_status,
+                    confidence=chosen_confidence,
+                    reviewer=reviewer_input,
+                    diagnostic_notes=notes_input,
+                )
+                st.success(
+                    f"✅ Successfully updated specimen **`{selected_sid}`** across all {result['views_updated']} view(s)! "
+                    f"(Backup saved to `{Path(result['backup_path']).name}`)"
+                )
+                st.rerun()
+            except Exception as err:
+                st.error(f"❌ Validation Error: {err}")
+
+        # Revert & Rollback Tools
+        st.markdown("---")
+        st.markdown("### 4. Specimen Revert & Manifest Rollback")
+        rev_col1, rev_col2 = st.columns(2)
+
+        with rev_col1:
+            st.markdown("#### Revert Current Specimen")
+            st.caption("Resets this specimen's label and status back to `pending_review` across all views.")
+            if st.button(f"🔄 Revert {selected_sid} to Pending", key=f"revert_{selected_sid}"):
+                try:
+                    revert_res = revert_specimen_review(
+                        manifest_path=staging_manifest_path,
+                        specimen_id=selected_sid,
+                    )
+                    st.info(f"Specimen `{selected_sid}` reverted to pending across {revert_res['views_updated']} view(s).")
+                    st.rerun()
+                except Exception as err:
+                    st.error(f"Revert error: {err}")
+
+        with rev_col2:
+            st.markdown("#### Manifest Backup & Undo")
+            backup_file = staging_manifest_path.with_suffix(".backup.csv")
+            if backup_file.is_file():
+                backup_mtime = datetime.fromtimestamp(backup_file.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                st.caption(f"Latest backup: `{backup_file.name}` (Created: {backup_mtime})")
+                confirm_restore = st.checkbox("I want to restore the staging manifest from this backup", key="confirm_restore")
+                if st.button("⏪ Undo All Changes (Restore Backup)", disabled=not confirm_restore):
+                    try:
+                        restore_manifest_backup(staging_manifest_path)
+                        st.success("Staging manifest restored to previous backup state.")
+                        st.rerun()
+                    except Exception as err:
+                        st.error(f"Restore error: {err}")
+            else:
+                st.caption("No backup file (`staging_manifest.backup.csv`) exists yet. A backup will be generated on your first save.")
 
     # -------------------------------------------------------------
     # PAGE 3: MODEL EVALUATION & BENCHMARK
@@ -511,7 +978,7 @@ def main():
         st.dataframe(comp_df, use_container_width=True, hide_index=True)
 
         if comp_plot and comp_plot.exists():
-            st.image(str(comp_plot), caption="Accuracy, Macro F1, and Latency Comparison", use_container_width=True)
+            st.image(str(comp_plot), caption="Accuracy, Macro F1, and Latency Comparison", width="stretch")
 
         st.markdown("---")
         st.markdown("### Detailed Inspection by Architecture")
@@ -536,7 +1003,7 @@ def main():
             if is_real:
                 st.markdown(
                     f"""
-                    <div style="background-color: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #166534;">
+                    <div class="benchmark-notice-real">
                         <strong>🌱 GENUINE REAL-WORLD TEST BENCHMARK:</strong> Evaluated on genuine, human-annotated held-out test photographs.
                         <br><small>{eval_data.get('scientific_notice', '')}</small>
                     </div>
@@ -546,7 +1013,7 @@ def main():
             elif eval_type == "unverified_evaluation":
                 st.markdown(
                     f"""
-                    <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #92400e;">
+                    <div class="benchmark-notice-unverified">
                         <strong>⚠️ UNVERIFIED EVALUATION RUN:</strong> Real-world provenance criteria could not be confirmed (e.g. synthetic checkpoint or unverified dataset).
                         <br><small>{eval_data.get('scientific_notice', '')}</small>
                     </div>
@@ -556,7 +1023,7 @@ def main():
             else:
                 st.markdown(
                     f"""
-                    <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; color: #0369a1;">
+                    <div class="benchmark-notice-synthetic">
                         <strong>🧪 SYNTHETIC PIPELINE VERIFICATION:</strong> Evaluated on procedural synthetic fixtures for tensor transformation and gradient hook verification.
                         <br><small>{eval_data.get('scientific_notice', '')}</small>
                     </div>
@@ -580,23 +1047,23 @@ def main():
             with fig_col1:
                 cm_img = figures_dir / f"confusion_matrix_{m_name}.png"
                 if cm_img.exists():
-                    st.image(str(cm_img), caption="Confusion Matrix (Counts)", use_container_width=True)
+                    st.image(str(cm_img), caption="Confusion Matrix (Counts)", width="stretch")
 
             with fig_col2:
                 cm_norm_img = figures_dir / f"confusion_matrix_normalized_{m_name}.png"
                 if cm_norm_img.exists():
-                    st.image(str(cm_norm_img), caption="Normalized Confusion Matrix (Recall Rates)", use_container_width=True)
+                    st.image(str(cm_norm_img), caption="Normalized Confusion Matrix (Recall Rates)", width="stretch")
 
             fig_col3, fig_col4 = st.columns(2)
             with fig_col3:
                 per_class_img = figures_dir / f"per_class_metrics_{m_name}.png"
                 if per_class_img.exists():
-                    st.image(str(per_class_img), caption="Per-Class Precision, Recall & F1-Score", use_container_width=True)
+                    st.image(str(per_class_img), caption="Per-Class Precision, Recall & F1-Score", width="stretch")
 
             with fig_col4:
                 calib_img = figures_dir / f"calibration_{m_name}.png"
                 if calib_img.exists():
-                    st.image(str(calib_img), caption="Confidence Calibration Reliability Curve", use_container_width=True)
+                    st.image(str(calib_img), caption="Confidence Calibration Reliability Curve", width="stretch")
 
     # -------------------------------------------------------------
     # PAGE 4: METHODOLOGY & LIMITATIONS

@@ -1,0 +1,7 @@
+﻿"filename","specimen_id","view_id","candidate_label","review_status","confidence","source_provenance","variety","reviewer","diagnostic_notes"
+"REAL_CHICKPEA_001_v1.jpg","REAL_CHICKPEA_001","view_01","pending_review","pending","","User-photographed; source details unverified","unknown","","Yellow-orange area near tip; significance undetermined"
+"REAL_CHICKPEA_001_v2.jpg","REAL_CHICKPEA_001","view_02","pending_review","pending","","User-photographed; source details unverified","unknown","","Second view of the same chickpea"
+"REAL_CHICKPEA_001_v3.jpg","REAL_CHICKPEA_001","view_03","pending_review","pending","","User-photographed; source details unverified","unknown","","Third view of the same chickpea"
+"REAL_CHICKPEA_002_v1.jpg","REAL_CHICKPEA_002","view_01","pending_review","pending","","User-photographed; source details unverified","","","Surface appearance requires human review"
+"REAL_CHICKPEA_002_v2.jpg","REAL_CHICKPEA_002","view_02","pending_review","pending","","User-photographed; source details unverified","","","Surface appearance requires human review"
+"REAL_CHICKPEA_002_v3.jpg","REAL_CHICKPEA_002","view_03","pending_review","pending","","User-photographed; source details unverified","","","Surface appearance requires human review"

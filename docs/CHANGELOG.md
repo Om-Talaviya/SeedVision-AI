@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **Streamlit UI Readability & Contrast (WCAG 2.1 AA/AAA Compliance)**:
+  - Created `.streamlit/config.toml` configuring official Streamlit theme tokens (`primaryColor: #2e7d32`, `backgroundColor: #f8fafc`, `secondaryBackgroundColor: #ffffff`, `textColor: #0f172a`).
+  - Removed unscoped hardcoded `background-color: #ffffff` on `section[data-testid="stSidebar"]` that previously caused white-on-white text in dark mode and low contrast on radio buttons and headers.
+  - Implemented theme-adaptive CSS rules in `app.py` for sidebar headings, radio navigation labels, selected navigation state, and model checkpoints.
+  - Added `@media (prefers-color-scheme: dark)` overrides ensuring accessible contrast across both light and dark modes without hardcoded clashing colors.
+  - Converted inline styles for quality class descriptions, notices, and tags to semantic CSS classes (`feature-card-desc`, `sidebar-notice-box`, `sidebar-tag-real`, `sidebar-tag-synth`, `benchmark-notice-*`, `safeguard-notice`).
+- **Streamlit Top Header Spacing & Layout Optimization**:
+  - Overrode default Streamlit `.block-container` / `[data-testid="stMainBlockContainer"]` top padding from `6rem` (96px) down to `1.5rem` (24px), eliminating dead blank vertical space above the hero banner.
+  - Constrained top header height (`header[data-testid="stHeader"]`) to `2.25rem` with transparent background and non-blocking pointer events (`pointer-events: none` on header container, `pointer-events: auto` on interactive children).
+  - Cleaned up top-right navigation by hiding the deployment promotion widget (`[data-testid="stDeployButton"]`) while preserving full accessibility of hamburger settings, sidebar toggles, and main controls.
+  - Optimized `.hero-card` dimensions (`padding: 1.75rem 2.25rem`, `margin-top: 0 !important`, `margin-bottom: 1.5rem`) and ensured second-page `<h2>` titles have zero top margin.
+  - Added responsive viewport rules (`@media (max-width: 768px)`) for compact mobile/tablet viewports.
+  - Added `test_app_header_and_main_padding_optimization` to `tests/test_ui_contrast_and_theme.py` (99/99 tests passing repository-wide).
+
+### Added
+
+- **Human-Review Workflow for Real Data Staging**:
+  - Implemented core review and specimen-grouping module `src/seedvision/data/real_review.py`:
+    - `load_staging_manifest`: Groups photos by `specimen_id`, verifies image existence and dimensions ($W \times H$ px).
+    - `validate_review_decision`: Enforces SeedVision 4-class taxonomy + `pending_review`, mandates reviewer identity and diagnostic notes on approval, and strictly preserves `pending` status for low-confidence or ambiguous specimens.
+    - `save_specimen_review`: Applies uniform specimen-level labels across all views of a physical seed with automatic backup creation (`staging_manifest.backup.csv`) and atomic file replacement.
+    - `revert_specimen_review` & `restore_manifest_backup`: Provides one-click specimen reset and complete manifest undo capabilities.
+  - Integrated dedicated **"Real Data Staging Review"** page into the Streamlit laboratory (`app.py`):
+    - Displays high-level specimen and view metrics.
+    - Specimen selector with status badges and view counts.
+    - Multi-view gallery displaying all photographic angles side-by-side.
+    - Human review form with target defect selection, confidence rating, reviewer identity, and diagnostic notes.
+    - Specimen revert button and manifest restore-from-backup control with confirmation safeguards.
+  - Created CLI review interface `scripts/review_staging_specimens.py` supporting `--list`, `--specimen-id`, `--label`, `--status`, `--confidence`, `--reviewer`, `--notes`, `--revert`, `--restore-backup`, and `--dry-run`.
+  - Added unit test suite `tests/test_real_review_workflow.py` (14 new test cases covering validation, multi-view consistency, backup creation, and rollback; 92 total tests passing across repository).
+
+  - Upgraded `scripts/build_roboflow_review_gallery.py` with client-side pagination, batch navigation (200 crops/batch), dynamic source-class and review-status filters, search, and crop dimensions display (`width x height`, aspect ratio, low-res indicator).
+  - Implemented `src/seedvision/data/roboflow_review.py` providing `get_crop_dimensions`, `generate_crop_metadata`, and `triage_foreign_material`.
+  - Generated `crop_metadata.csv` recording dimensions (`width`, `height`, `aspect_ratio`), low-resolution triage flags (<28px), while strictly preserving source annotations, splits, and grouping.
+  - Implemented reversible, auditable, and idempotent triage (`scripts/triage_roboflow_crops.py`):
+    - Confirmed non-pulse foreign matter (`Material extrano inorganico` and `Material extrano organico`, totaling 2,028 crops) and triaged as `rejected` with reason `foreign_material`.
+    - Zero auto-mapping of Roboflow classes to SeedVision's four target classification labels.
+    - Low-resolution crops (<28px) are flagged for human review and never auto-rejected.
+    - Preserved automatic pre-update backup (`manual_review.backup.csv`).
+    - Maintained all 28,428 remaining rows in `pending` review status.
+  - Enriched `scripts/summarize_roboflow_review.py` with resolution distribution statistics and triage audit metrics.
+  - Added on-card human verification forms and CSV decision export to `scripts/build_roboflow_review_gallery.py`.
+  - Implemented `scripts/apply_manual_review.py` and core validators (`validate_human_decision`, `apply_manual_review_decisions`, `revert_manual_review_decisions`) with strict 4-class target validation, mandatory reviewer rationale, and pre-modification backup.
+  - Expanded automated test suite to 64 passing tests across the repository.
+
 ## [1.4.0] - 2026-10-15
 
 ### Added

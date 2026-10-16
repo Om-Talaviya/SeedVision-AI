@@ -1,0 +1,5 @@
+filename,specimen_id,view_id,candidate_label,review_status,confidence,source_provenance,variety,reviewer,diagnostic_notes
+chickpea_desi_JG11_S001_v1.jpg,SPECIMEN-2026-001,v1,sound_healthy,pending,high,ICRISAT Genebank / Pulse Field Trial Plot 4B,Desi Chickpea (JG-11),agronomist_lead,"Intact seed coat, normal angular morphology, uniform beige pigmentation, no fissures or lesions."
+chickpea_desi_JG11_S002_v1.jpg,SPECIMEN-2026-002,v1,broken_cracked,pending,high,ICRISAT Genebank / Pulse Field Trial Plot 4B,Desi Chickpea (JG-11),agronomist_lead,Prominent 2.2mm mechanical fissure across left cotyledon following threshing; testa split.
+chickpea_kabuli_KAK2_S003_v1.jpg,SPECIMEN-2026-003,v1,discolored_spotted,pending,high,University Agricultural Research Farm,Kabuli Chickpea (KAK-2),pathologist_evaluator,Ascochyta blight necrotic lesions (>8% testa surface area) with pycnidial centers.
+chickpea_desi_JG11_S004_v1.jpg,SPECIMEN-2026-004,v1,shrivelled_damaged,pending,high,ICRISAT Genebank / Pulse Field Trial Plot 4B,Desi Chickpea (JG-11),agronomist_lead,Premature desiccation causing severe wrinkling and hollow cotyledon structure; >30% volume reduction.

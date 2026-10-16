@@ -47,6 +47,7 @@ data/real_raw/**/*.jpeg
 data/real_raw/**/*.png
 data/real_raw/**/*.webp
 data/real_raw/**/*.bmp
+data/roboflow_v8_review/
 data/provenance_real.json
 artifacts/checkpoints/*.pt
 artifacts/checkpoints/*.pth

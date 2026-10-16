@@ -1,0 +1,22 @@
+{
+  "timestamp_utc": "2026-10-16T08:54:06.391580+00:00",
+  "staging_dir": "D:\\AI\\Projects\\SeedVision AI\\data\\real_staging",
+  "incoming_dir": "D:\\AI\\Projects\\SeedVision AI\\data\\real_staging\\incoming",
+  "manifest_path": "D:\\AI\\Projects\\SeedVision AI\\data\\real_staging\\staging_manifest.csv",
+  "status": "valid",
+  "total_files_found": 0,
+  "valid_images": 0,
+  "corrupt_files": [],
+  "low_resolution_warnings": [],
+  "exact_duplicates": [],
+  "near_duplicates": [],
+  "specimen_groups": {},
+  "class_distribution": {},
+  "review_status_counts": {},
+  "unreviewed_pending_count": 0,
+  "ambiguous_pending_count": 0,
+  "approved_count": 0,
+  "rejected_count": 0,
+  "synthetic_fixtures": [],
+  "issues": []
+}
