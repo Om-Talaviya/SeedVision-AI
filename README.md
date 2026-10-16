@@ -135,68 +135,68 @@ flowchart TD
 
 ## 🖼️ Application Screenshot Gallery
 
-The SeedVision AI Streamlit laboratory (`app.py`) provides an interactive interface across five dedicated pages. Below are actual screenshots of the running system.
+The SeedVision AI Streamlit laboratory (`app.py`) provides an interactive research interface across five dedicated pages. Below are the actual screenshots of the running application, each paired with its specific section title and visual description.
 
-### 1. Home & System Overview
-The landing dashboard introduces the research context, quality grading objectives, architectural overview, and research boundaries.
+### 1. Home & System Overview Dashboard
+The landing dashboard introduces the agricultural pulse grading challenge, research objectives, software verification baseline notice, the 5-stage automated inspection pipeline, and interactive reference cards for the four supported defect classes.
 
 ![SeedVision AI Home & Overview](docs/assets/home-overview.png)
 
 ---
 
-### 2. Live Seed Quality Analysis with Grad-CAM
-Upload a macro chickpea photograph to receive real-time defect classification, confidence scores, and the three-panel Grad-CAM attribution triplet isolating diagnostic visual features.
+### 2. Seed Quality Analysis & Model Selection Interface
+The diagnostic intake view where users select a trained model checkpoint (`best_MobileNetV2-Transfer.pt` or `best_SeedNet-Baseline.pt`), upload a macro chickpea photograph (`JPG`, `PNG`, `WEBP`, `BMP`), or select from pre-loaded demonstration samples to trigger automated quality grading and Grad-CAM generation.
 
 ![Seed Quality Analysis](docs/assets/seed-quality-analysis.png)
 
 ---
 
-### 3. Real Data Intake Staging
-Inspect incoming real photographic seed specimens, review multi-view intake statistics, and verify dimensional and metadata integrity before dataset promotion.
+### 3. Real Data Staging & Intake Statistics
+The staging dashboard for incoming genuine chickpea photographs, showing high-level intake metric cards (2 total physical specimens, 6 photographic views, 0 approved, 6 pending review), the specimen selector dropdown, and verified provenance metadata before dataset promotion.
 
 ![Real Data Staging](docs/assets/real-data-staging.png)
 
 ---
 
-### 4. Specimen Multi-Angle Gallery
-Examine all photographic angles of a physical specimen side-by-side to assess whole-seed morphology and surface integrity.
+### 4. Specimen Metadata & Provenance Audit
+Detailed inspection card for physical seed `REAL_CHICKPEA_001`, tracking agronomic variety, capture provenance, current `PENDING` review status, unassigned reviewer attribution, and preliminary morphological diagnostic notes prior to formal approval.
 
-![Specimen Multi-View Gallery](docs/assets/specimen-gallery.png)
-
----
-
-### 5. Agronomic Human Review & Decision Interface
-Assign specimen-level defect labels across all views, capture reviewer attribution and diagnostic morphological notes, with automated pre-save backups and instant rollback.
-
-![Human Review Workflow](docs/assets/human-review.png)
+![Specimen Metadata Audit](docs/assets/specimen-gallery.png)
 
 ---
 
-### 6. Architecture Inspection
-Inspect individual model architectures, layer hierarchies, parameter counts, and detailed evaluation checkpoints.
+### 5. Multi-View Specimen Angle Gallery
+Side-by-side photographic gallery displaying all three macro angles (`view_01`, `view_02`, `view_03` at $960 \times 1280$ px each) of physical seed specimen `REAL_CHICKPEA_001`, enabling agronomists to inspect the entire seed coat and avoid single-perspective false classifications.
 
-![Model Architecture Inspection](docs/assets/model-inspection.png)
-
----
-
-### 7. Cross-Architecture Benchmark Summary
-Head-to-head comparison between **SeedNet-Baseline** and **MobileNetV2** detailing accuracy, F1-scores, CPU inference latency, throughput, and checkpoint sizes.
-
-![Benchmark Summary](docs/assets/benchmark-summary.png)
+![Multi-View Specimen Gallery](docs/assets/human-review.png)
 
 ---
 
-### 8. Benchmark Visualizations & Calibration Curves
-Examine count confusion matrices, normalized recall matrices, per-class metrics, and confidence calibration reliability curves.
+### 6. Human Review Decision Form & Manifest Rollback
+Interactive human-in-the-loop review form allowing agronomists to assign a verified 4-class defect label, record confidence levels, log reviewer identity, and provide morphological diagnostic notes, supported by automated pre-save manifest backup safeguards and one-click specimen revert tools.
 
-![Benchmark Visualizations](docs/assets/benchmark-visualization.png)
+![Human Review Decision Form](docs/assets/model-inspection.png)
 
 ---
 
-### 9. Scientific Methodology & Research Principles
-Comprehensive in-app documentation detailing agronomic defect criteria, mathematical Grad-CAM derivations, and research ethics guidelines.
+### 7. Per-Architecture Evaluation & Confusion Matrices
+Detailed architecture evaluation view for `MobileNetV2-Transfer` displaying key metric scorecards (100.0% test accuracy, 100.0% macro F1, 0.0412 ECE, 13.4 ms CPU latency) alongside raw count and normalized recall confusion matrices across all four defect classes.
 
-![Scientific Methodology](docs/assets/methodology.png)
+![Architecture Evaluation & Confusion Matrices](docs/assets/benchmark-summary.png)
+
+---
+
+### 8. Scientific Methodology — Agricultural Defect Taxonomy
+The in-app scientific documentation library with the `Agricultural Taxonomy` tab active, formalizing the botanical grading criteria, morphological signatures, and environmental causes for healthy seeds, discolored/stained pulses, mechanical cracks, and bruchid weevil insect damage.
+
+![Scientific Methodology Defect Taxonomy](docs/assets/benchmark-visualization.png)
+
+---
+
+### 9. Cross-Architecture Benchmark Summary & Latency Comparison
+Head-to-head benchmark comparison dashboard featuring the comparative performance metrics table and dual bar charts comparing `SeedNet-Baseline` against `MobileNetV2`, demonstrating SeedNet-Baseline's 2.3× faster CPU latency (5.72 ms vs 13.37 ms) and superior calibration ($\text{ECE} = 0.0251$).
+
+![Cross-Architecture Benchmark Summary](docs/assets/methodology.png)
 
 ---
 
