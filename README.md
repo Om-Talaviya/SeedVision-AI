@@ -220,6 +220,22 @@ python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_SeedNet-Basel
 python scripts/evaluate.py --checkpoint artifacts/checkpoints/best_MobileNetV2-Transfer-Real.pt --splits-dir data/processed/splits_real
 ```
 
+### C. Roboflow v8 Object-Annotation Review (Separate Workflow)
+The Roboflow v8 export contains object annotations (bounding boxes and polygons)
+and unverified classes; it is not a direct input to the four-class image
+classifier. Validate the export in report-only mode first, then optionally stage
+per-annotation crops with every defect label left pending manual review. Keep the
+export unchanged and use an output directory outside it.
+
+```powershell
+python scripts/preprocess_roboflow.py --dataset "C:\Users\OM\Downloads\chickpea seeds.v8i.yolov8"
+python scripts/preprocess_roboflow.py --dataset "C:\Users\OM\Downloads\chickpea seeds.v8i.yolov8" --stage-crops --output "data/roboflow_v8_review"
+```
+
+See [`docs/ROBOFLOW_V8_PREPROCESSING.md`](docs/ROBOFLOW_V8_PREPROCESSING.md) for
+validation behavior and the manual-review CSV fields. This workflow does not
+train a model or modify the classifier's source datasets.
+
 ### Step 4: Run Single-Image Inference with Grad-CAM
 ```bash
 python scripts/predict.py --checkpoint artifacts/checkpoints/best_SeedNet-Baseline.pt --image data/raw/broken_cracked/broken_cracked_001.jpg
@@ -313,3 +329,33 @@ If you use SeedVision AI in academic coursework or pulse quality research, pleas
   howpublished = {\url{https://github.com/Om-Talaviya/SeedVision-AI}}
 }
 ```
+
+## Application Screenshots
+
+Screenshots from the SeedVision AI Streamlit application.
+
+Home & Overview
+![SeedVision AI Home](docs/assets/home-overview.png)
+
+Seed Quality Analysis
+![Seed Quality Analysis](docs/assets/seed-quality-analysis.png)
+
+Real Data Staging & Specimen Gallery
+![Real Data Staging](docs/assets/real-data-staging.png)
+
+![Specimen Gallery](docs/assets/specimen-gallery.png)
+
+Human Review Workflow
+![Human Review](docs/assets/human-review.png)
+
+Model Evaluation & Benchmarking
+![Model Inspection](docs/assets/model-inspection.png)
+
+![Benchmark Summary](docs/assets/benchmark-summary.png)
+
+![Benchmark Visualization](docs/assets/benchmark-visualization.png)
+
+ Scientific Methodology
+![Scientific Methodology](docs/assets/methodology.png)
+
+Evaluation note: The reported benchmark metrics represent synthetic pipeline verification, not validated real-world chickpea classification performance. Real photographic specimens remain pending human review.
