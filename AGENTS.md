@@ -39,7 +39,7 @@ SeedVision AI is a production-grade, college-level Deep Learning Applications (D
 | `src/seedvision/inference/` | Inference predictor & input validation | `SeedPredictor`, `InferenceInputValidator` |
 | `scripts/` | Executable CLI tools | `prepare_dataset.py`, `train.py`, `evaluate.py`, `predict.py` |
 | `app.py` | Streamlit interactive web laboratory | Multi-page dashboard on port 8501 |
-| `tests/` | Automated unit & regression suite | 99 pytest cases covering all components |
+| `tests/` | Automated unit & regression suite | 193 pytest cases covering all components |
 
 ---
 
@@ -53,7 +53,7 @@ SeedVision AI is a production-grade, college-level Deep Learning Applications (D
 
 ### 4.2 Automated Test Enforcement
 Whenever modifying any core component in `src/seedvision/`:
-1. Run `pytest tests/ -v` to ensure all 99 tests remain passing.
+1. Run `pytest tests/ -v` to ensure all 193 tests remain passing.
 2. If new functionality is introduced (e.g., test-time augmentation, new pulse varieties), add corresponding unit tests under `tests/`.
 
 ---
@@ -81,7 +81,7 @@ sequenceDiagram
 ## 6. Definition of Done (DoD)
 A task or pull request is complete only when:
 - [x] Code is clean, maintainable, and adheres to PEP 8 standards.
-- [x] All 99 tests pass without errors or warnings.
+- [x] All 193 tests pass without errors or warnings.
 - [x] Relevant documentation (`README.md`, `docs/`, `CHANGELOG.md`) is updated.
 - [x] No sensitive tokens, hardcoded developer paths, or giant checkpoint blobs are committed to Git.
 - [x] Limitations regarding biological seed viability are clearly retained.

@@ -4,7 +4,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2+-ee4c2c.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Streamlit App](https://img.shields.io/badge/Web%20App-Streamlit-FF4B4B.svg)](app.py)
-[![Test Suite](https://img.shields.io/badge/Tests-99%20passed-brightgreen.svg)](tests/)
+[![Test Suite](https://img.shields.io/badge/Tests-193%20passed-brightgreen.svg)](tests/)
 [![Code Style: PEP 8](https://img.shields.io/badge/code%20style-pep8-black.svg)](https://pep8.org/)
 
 > **A reproducible, college-level Deep Learning Applications (DLA) computer vision system for agricultural pulse quality grading, physical defect classification, and Grad-CAM spatial attribution.**
@@ -39,7 +39,7 @@ In grain procurement centres, seed processing mills, and agricultural testing la
 | **Explainable AI** | Native Grad-CAM attribution at final convolutional feature maps with alpha blending |
 | **Calibration & ECE** | Uncertainty warning for confidence $<50\%$; Expected Calibration Error ($\text{ECE} = 0.0251$) |
 | **User Interface** | Interactive 5-page Streamlit Web Laboratory (`app.py`) on `http://localhost:8501` |
-| **Test Suite** | **99 automated pytest unit and integration tests** (100% passing) |
+| **Test Suite** | **193 automated pytest unit and integration tests** (100% passing) |
 | **Data Staging & Review** | Specimen-grouped multi-view staging, human review forms, automated backups, and undo tools |
 | **Hardware Requirement** | 100% CPU compatible (Intel/AMD/Apple Silicon); CUDA acceleration auto-detected |
 
@@ -301,7 +301,7 @@ Verify that all unit and integration tests pass cleanly:
 ```powershell
 pytest tests/ -v
 ```
-*(All 99 tests should pass in under 15 seconds).*
+*(All 193 tests should pass in under 15 seconds).*
 
 ---
 
@@ -452,7 +452,7 @@ SeedVision-AI/
 │   ├── checkpoints/                   # Trained PyTorch weights (.pt) & metadata
 │   ├── metrics/                       # Evaluation JSONs & CSV summaries
 │   └── figures/                       # Confusion matrices, curves & overlays
-└── tests/                             # Automated test suite (99 pytest cases)
+└── tests/                             # Automated test suite (193 pytest cases)
 ```
 
 ---
