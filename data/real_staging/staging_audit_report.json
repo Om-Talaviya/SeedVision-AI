@@ -1,19 +1,40 @@
 {
-  "timestamp_utc": "2026-10-16T08:54:06.391580+00:00",
-  "staging_dir": "D:\\AI\\Projects\\SeedVision AI\\data\\real_staging",
-  "incoming_dir": "D:\\AI\\Projects\\SeedVision AI\\data\\real_staging\\incoming",
-  "manifest_path": "D:\\AI\\Projects\\SeedVision AI\\data\\real_staging\\staging_manifest.csv",
+  "timestamp_utc": "2026-10-17T04:22:26.225420+00:00",
+  "staging_dir": "data/real_staging",
+  "incoming_dir": "data/real_staging/incoming",
+  "manifest_path": "data/real_staging/staging_manifest.csv",
   "status": "valid",
-  "total_files_found": 0,
-  "valid_images": 0,
+  "total_files_found": 6,
+  "valid_images": 6,
   "corrupt_files": [],
   "low_resolution_warnings": [],
   "exact_duplicates": [],
   "near_duplicates": [],
-  "specimen_groups": {},
-  "class_distribution": {},
-  "review_status_counts": {},
-  "unreviewed_pending_count": 0,
+  "specimen_groups": {
+    "REAL_CHICKPEA_001": {
+      "views": [
+        "REAL_CHICKPEA_001_v1.jpg",
+        "REAL_CHICKPEA_001_v2.jpg",
+        "REAL_CHICKPEA_001_v3.jpg"
+      ],
+      "count": 3
+    },
+    "REAL_CHICKPEA_002": {
+      "views": [
+        "REAL_CHICKPEA_002_v1.jpg",
+        "REAL_CHICKPEA_002_v2.jpg",
+        "REAL_CHICKPEA_002_v3.jpg"
+      ],
+      "count": 3
+    }
+  },
+  "class_distribution": {
+    "pending_review": 6
+  },
+  "review_status_counts": {
+    "pending": 6
+  },
+  "unreviewed_pending_count": 6,
   "ambiguous_pending_count": 0,
   "approved_count": 0,
   "rejected_count": 0,

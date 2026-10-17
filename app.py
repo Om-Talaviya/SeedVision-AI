@@ -177,6 +177,28 @@ st.markdown(
         color: #166534;
     }
 
+    /* Sidebar Brand Banner - Theme-Adaptive, No External Asset */
+    .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.5rem;
+        color: #ffffff;
+        box-shadow: 0 2px 6px rgba(27, 94, 32, 0.15);
+    }
+    .sidebar-brand-icon {
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+    .sidebar-brand-text {
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+    }
+
     /* Hero Header Card */
     .hero-card {
         background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
@@ -387,11 +409,28 @@ def main():
     cfg = load_config("configs/default.yaml")
 
     # Sidebar Navigation
-    st.sidebar.image(
-        "https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=400&q=80",
-        caption="SeedVision AI Laboratory",
-        use_container_width=True,
+    # Brand banner: prefer a suitable local project asset if present; otherwise
+    # render an offline-safe banner with no external image dependency.
+    hero_asset = next(
+        (p for p in (Path("docs/assets/hero.png"), Path("docs/assets/hero.jpg")) if p.exists()),
+        None,
     )
+    if hero_asset:
+        st.sidebar.image(
+            str(hero_asset),
+            caption="SeedVision AI Laboratory",
+            use_container_width=True,
+        )
+    else:
+        st.sidebar.markdown(
+            """
+            <div class="sidebar-brand" role="img" aria-label="SeedVision AI Laboratory">
+                <span class="sidebar-brand-icon">&#127793;</span>
+                <span class="sidebar-brand-text">SeedVision AI Laboratory</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     st.sidebar.markdown("## **SeedVision AI**")
     st.sidebar.markdown(f"**Target Pulse:** `{cfg.dataset.seed_type}`")
 
@@ -631,7 +670,6 @@ def main():
             st.markdown("### Inspection Results")
 
             # Result Metrics Row
-            badge_class = f"badge-{res.predicted_class.split('_')[0]}"
             if "healthy" in res.predicted_class:
                 badge_class = "badge-healthy"
             elif "spotted" in res.predicted_class:

@@ -15,6 +15,9 @@ from scripts.stage_real_intake import (
 )
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
 @pytest.fixture
 def mock_staging_dir(tmp_path: Path) -> Path:
     staging_dir = tmp_path / "test_staging"
@@ -235,7 +238,7 @@ def test_synthetic_fixture_helper_detection():
 
 
 def test_isolated_synthetic_staging_fixtures_integrity():
-    fixtures_dir = Path("d:/AI/Projects/SeedVision AI/tests/fixtures/synthetic_staging")
+    fixtures_dir = PROJECT_ROOT / "tests" / "fixtures" / "synthetic_staging"
     assert fixtures_dir.is_dir()
 
     v1 = fixtures_dir / "chickpea_desi_JG11_SPECIMEN001_v1.jpg"
@@ -265,7 +268,7 @@ def test_isolated_synthetic_staging_fixtures_integrity():
 
 
 def test_real_staging_incoming_is_clean():
-    incoming_dir = Path("d:/AI/Projects/SeedVision AI/data/real_staging/incoming")
+    incoming_dir = PROJECT_ROOT / "data" / "real_staging" / "incoming"
     assert incoming_dir.is_dir()
 
     # Verify no synthetic demonstration images remain in incoming/
@@ -274,7 +277,7 @@ def test_real_staging_incoming_is_clean():
     assert "chickpea_desi_JG11_SPECIMEN001_v2.jpg" not in incoming_files
 
     # Verify staging manifest contains valid records matching incoming files
-    manifest_p = Path("d:/AI/Projects/SeedVision AI/data/real_staging/staging_manifest.csv")
+    manifest_p = PROJECT_ROOT / "data" / "real_staging" / "staging_manifest.csv"
     assert manifest_p.is_file()
     df = pd.read_csv(manifest_p)
     if len(df) > 0:

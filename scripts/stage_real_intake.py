@@ -231,9 +231,9 @@ def validate_staging_dataset(
 
     report: Dict[str, Any] = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "staging_dir": str(staging_dir.resolve()),
-        "incoming_dir": str(incoming_dir.resolve()),
-        "manifest_path": str(manifest_path.resolve()) if manifest_path else None,
+        "staging_dir": staging_dir.as_posix(),
+        "incoming_dir": incoming_dir.as_posix(),
+        "manifest_path": manifest_path.as_posix() if manifest_path else None,
         "status": "valid",
         "total_files_found": 0,
         "valid_images": 0,

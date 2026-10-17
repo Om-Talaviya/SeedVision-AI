@@ -8,7 +8,7 @@ approved by this workflow.
 The original export must remain unchanged. Run the CLI in report-only mode first:
 
 ```powershell
-python scripts/preprocess_roboflow.py --dataset "C:\Users\OM\Downloads\chickpea seeds.v8i.yolov8"
+python scripts/preprocess_roboflow.py --dataset "<path\to\chickpea seeds.v8i.yolov8>"
 ```
 
 The report checks the declared class names, image and label pairing, image
@@ -24,9 +24,9 @@ After reviewing that report, create a separate staging directory for crops:
 
 ```powershell
 python scripts/preprocess_roboflow.py `
-  --dataset "C:\Users\OM\Downloads\chickpea seeds.v8i.yolov8" `
+  --dataset "<path\to\chickpea seeds.v8i.yolov8>" `
   --stage-crops `
-  --output "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review"
+  --output "data/roboflow_v8_review"
 ```
 
 Staging writes one crop per valid annotation under `crops/`, a
@@ -43,8 +43,8 @@ Build an interactive visual gallery before recording human decisions in the CSV:
 
 ```powershell
 python scripts/build_roboflow_review_gallery.py `
-  --manifest "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review\manual_review.csv" `
-  --output "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review\review_gallery.html" `
+  --manifest "data/roboflow_v8_review/manual_review.csv" `
+  --output "data/roboflow_v8_review/review_gallery.html" `
   --limit 2000
 ```
 
@@ -57,10 +57,10 @@ Generate crop dimensions and perform auditable, reversible foreign-material tria
 
 ```powershell
 python scripts/triage_roboflow_crops.py `
-  --manifest "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review\manual_review.csv" `
+  --manifest "data/roboflow_v8_review/manual_review.csv" `
   --generate-metadata `
   --action triage `
-  --backup-path "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review\manual_review.backup.csv"
+  --backup-path "data/roboflow_v8_review/manual_review.backup.csv"
 ```
 
 This operation:
@@ -75,8 +75,8 @@ Capture the enriched review state, including resolution statistics and triage co
 
 ```powershell
 python scripts/summarize_roboflow_review.py `
-  --manifest "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review\manual_review.csv" `
-  --output "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review\review_report.json"
+  --manifest "data/roboflow_v8_review/manual_review.csv" `
+  --output "data/roboflow_v8_review/review_report.json"
 ```
 
 ### Recording and Applying Human Review Decisions
@@ -86,12 +86,12 @@ Human review decisions can be staged directly in `review_gallery.html` using the
 ```powershell
 # Apply a batch of human decisions from a reviewed CSV:
 python scripts/apply_manual_review.py `
-  --manifest "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review\manual_review.csv" `
+  --manifest "data/roboflow_v8_review/manual_review.csv" `
   --decisions "human_review_decisions.csv"
 
 # Or record a single verified crop decision:
 python scripts/apply_manual_review.py `
-  --manifest "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review\manual_review.csv" `
+  --manifest "data/roboflow_v8_review/manual_review.csv" `
   --crop-path "crops/ff52bace81fd91d5.png" `
   --status "approved" `
   --label "sound_healthy" `
@@ -100,7 +100,7 @@ python scripts/apply_manual_review.py `
 
 # Or revert a decision back to pending:
 python scripts/apply_manual_review.py `
-  --manifest "D:\AI\Projects\SeedVision AI\data\roboflow_v8_review\manual_review.csv" `
+  --manifest "data/roboflow_v8_review/manual_review.csv" `
   --crop-path "crops/ff52bace81fd91d5.png" `
   --revert
 ```

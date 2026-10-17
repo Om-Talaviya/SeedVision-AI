@@ -75,7 +75,7 @@ paths:
 
 | Column Name | Type | Description | Example |
 | :--- | :---: | :--- | :--- |
-| `filepath` | String | Absolute path to validated image file | `D:\AI\...\sound_healthy_001.jpg` |
+| `filepath` | String | Absolute path to validated image file | `/data/raw/sound_healthy/sound_healthy_001.jpg` |
 | `filename` | String | Base image file name | `sound_healthy_001.jpg` |
 | `class_name` | String | Target agricultural quality class | `sound_healthy` |
 | `seed_id` | String | Unique physical seed entity identifier | `sound_healthy_001` |

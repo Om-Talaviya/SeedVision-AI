@@ -16,7 +16,7 @@ Chickpea is one of the world's primary legume pulse crops, cultivated across the
 
 > [!NOTE]
 > **STATUTORY VS OPERATIONAL PROXY DISTINCTION:**
-> Official commercial pulse standards (AGMARK India, USDA GIPSA) regulate grain lots by **mass percentage (weight/weight)** in bulk samples (e.g. max 2% broken seeds by weight). Single-seed microscopic thresholds (e.g., $1.5\text{ mm}$ crack length, $5\%$ necrotic area) are **project-defined operational proxies** for RGB macro-computer-vision classification, NOT statutory standards. Full protocol documented in [REAL_DATA_ACQUISITION_WORKFLOW.md](file:///d:/AI/Projects/SeedVision%20AI/docs/REAL_DATA_ACQUISITION_WORKFLOW.md).
+> Official commercial pulse standards (AGMARK India, USDA GIPSA) regulate grain lots by **mass percentage (weight/weight)** in bulk samples (e.g. max 2% broken seeds by weight). Single-seed microscopic thresholds (e.g., $1.5\text{ mm}$ crack length, $5\%$ necrotic area) are **project-defined operational proxies** for RGB macro-computer-vision classification, NOT statutory standards. Full protocol documented in [REAL_DATA_ACQUISITION_WORKFLOW.md](./REAL_DATA_ACQUISITION_WORKFLOW.md).
 
 ---
 

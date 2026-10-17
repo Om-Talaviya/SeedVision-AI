@@ -14,6 +14,8 @@ import re
 import tomllib
 import pytest
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
 
 def srgb_to_linear(c_srgb: float) -> float:
     """Convert sRGB channel (0-1) to linear value for relative luminance calculation."""
@@ -49,7 +51,7 @@ def calculate_contrast_ratio(hex1: str, hex2: str) -> float:
 
 def test_streamlit_config_exists_and_valid():
     """Verify .streamlit/config.toml exists and contains valid TOML syntax."""
-    config_path = Path("D:/AI/Projects/SeedVision AI/.streamlit/config.toml")
+    config_path = PROJECT_ROOT / ".streamlit" / "config.toml"
     assert config_path.is_file(), ".streamlit/config.toml must exist"
 
     with open(config_path, "rb") as f:
@@ -65,7 +67,7 @@ def test_streamlit_config_exists_and_valid():
 
 def test_theme_wcag_contrast_ratios():
     """Verify that .streamlit/config.toml colors meet WCAG 2.1 AA (>= 4.5:1) and AAA standards."""
-    config_path = Path("D:/AI/Projects/SeedVision AI/.streamlit/config.toml")
+    config_path = PROJECT_ROOT / ".streamlit" / "config.toml"
     with open(config_path, "rb") as f:
         config = tomllib.load(f)
 
@@ -104,7 +106,7 @@ def test_badge_colors_wcag_compliance():
 
 def test_app_css_no_unscoped_white_sidebar():
     """Ensure app.py does not contain hardcoded unscoped white background on sidebar."""
-    app_path = Path("D:/AI/Projects/SeedVision AI/app.py")
+    app_path = PROJECT_ROOT / "app.py"
     content = app_path.read_text(encoding="utf-8")
 
     # Anti-pattern: section[data-testid="stSidebar"] { background-color: #ffffff; } without text color
@@ -115,7 +117,7 @@ def test_app_css_no_unscoped_white_sidebar():
 
 def test_app_css_has_accessible_sidebar_rules():
     """Verify that app.py defines high-contrast rules for sidebar headings, radio buttons, and active item."""
-    app_path = Path("D:/AI/Projects/SeedVision AI/app.py")
+    app_path = PROJECT_ROOT / "app.py"
     content = app_path.read_text(encoding="utf-8")
 
     assert 'section[data-testid="stSidebar"] h1' in content
@@ -129,7 +131,7 @@ def test_app_import_and_page_structure():
     import app
     assert hasattr(app, "main")
 
-    app_path = Path("D:/AI/Projects/SeedVision AI/app.py")
+    app_path = PROJECT_ROOT / "app.py"
     content = app_path.read_text(encoding="utf-8")
 
     # Verify all 5 pages exist in sidebar navigation
@@ -146,7 +148,7 @@ def test_app_import_and_page_structure():
 
 def test_app_header_and_main_padding_optimization():
     """Verify that app.py defines compact top header padding, hides deploy button, and optimizes hero card margins."""
-    app_path = Path("D:/AI/Projects/SeedVision AI/app.py")
+    app_path = PROJECT_ROOT / "app.py"
     content = app_path.read_text(encoding="utf-8")
 
     # Header height reduction

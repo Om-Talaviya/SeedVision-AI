@@ -30,7 +30,7 @@
 - [x] Directory scaffold and annotation guide initialized under `data/real_raw/` with `annotations_template.csv`.
 - [x] Added `--splits-dir` and `--name-suffix` flags to `scripts/train.py` and `scripts/evaluate.py` for decoupled real-data training.
 - [x] Multi-Gate Provenance Verification Engine (`provenance_verifier.py`) preventing false validation on renamed checkpoints or unverified splits.
-- [x] 10 specialized real-data unit tests in `tests/test_real_data_ingestion.py` and evaluation suite (42/42 total tests passing).
+- [x] 10 specialized real-data unit tests in `tests/test_real_data_ingestion.py` and evaluation suite (99/99 total tests passing).
 - [ ] User/Researcher upload of physical chickpea photos into `data/real_raw/` for final real-data benchmark execution.
 
 ---

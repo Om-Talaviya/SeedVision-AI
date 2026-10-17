@@ -419,23 +419,22 @@ SeedVision-AI/
 │   │   └── validation.py              # Image validation & directory audit
 │   ├── models/                        # Deep learning model architectures
 │   │   ├── cnn.py                     # Custom SeedNet-Baseline 4-stage CNN
-│   │   ├── transfer.py                # MobileNetV2 transfer learning candidate
+│   │   ├── transfer_learning.py       # MobileNetV2 transfer learning candidate
 │   │   └── factory.py                 # Model builder & parameter introspection
 │   ├── training/                      # Training loop, checkpoints & history
 │   │   ├── trainer.py                 # SeedTrainer with early stopping & scheduler
-│   │   ├── checkpoint.py              # CheckpointManager with metadata tagging
+│   │   ├── checkpoints.py             # CheckpointManager with metadata tagging
 │   │   └── history.py                 # TrainingHistory logging & metric tracking
 │   ├── evaluation/                    # Metrics, ECE calibration & provenance
-│   │   ├── evaluator.py               # ModelEvaluator for multi-class classification
-│   │   ├── metrics.py                 # Accuracy, macro F1, ECE calculation
+│   │   ├── metrics.py                 # ModelEvaluator, accuracy, macro F1, ECE
+│   │   ├── compare.py                 # Cross-model benchmark comparison
 │   │   ├── plots.py                   # Confusion matrices, PR curves, calibration
-│   │   └── provenance.py              # Multi-gate cryptographic verification
+│   │   └── provenance_verifier.py     # Multi-gate cryptographic verification
 │   ├── explainability/                # Explainable AI (Grad-CAM)
-│   │   ├── gradcam.py                 # Grad-CAM engine with clean hook hygiene
-│   │   └── overlay.py                 # Jet heatmap generation & alpha blending
+│   │   └── gradcam.py                 # Grad-CAM engine & jet overlay blending
 │   └── inference/                     # Inference engine & upload validator
 │       ├── predictor.py               # SeedPredictor for single-image diagnosis
-│       └── validator.py               # InferenceInputValidator for uploads
+│       └── validation.py              # InferenceInputValidator for uploads
 ├── scripts/                           # Executable CLI workflows
 │   ├── prepare_dataset.py             # Synthetic fixture generator & split builder
 │   ├── ingest_real_data.py            # Real photo audit, deduplication & splitting
