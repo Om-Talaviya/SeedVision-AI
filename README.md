@@ -9,9 +9,17 @@
 
 > **A reproducible, college-level Deep Learning Applications (DLA) computer vision system for agricultural pulse quality grading, physical defect classification, and Grad-CAM spatial attribution.**
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://om-talaviya.github.io/SeedVision-AI/site/) [![Source Code](https://img.shields.io/badge/Source%20Code-GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Om-Talaviya/SeedVision-AI)
+<div align="center">
 
-**🚀 Live Demo:** [Open SeedVision AI](https://om-talaviya.github.io/SeedVision-AI/site/) — live static showcase; source files are in [`docs/site/`](docs/site/).
+<h3>🚀 Live Demo</h3>
+
+<a href="https://om-talaviya.github.io/SeedVision-AI/site/"><img src="https://img.shields.io/badge/Open_Live_Demo-2ea043?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Open Live Demo"></a>&nbsp;&nbsp;&nbsp;<a href="https://github.com/Om-Talaviya/SeedVision-AI"><img src="https://img.shields.io/badge/Source_Code-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="Source Code"></a>
+
+<p><a href="https://om-talaviya.github.io/SeedVision-AI/site/"><b>https://om-talaviya.github.io/SeedVision-AI/site/</b></a></p>
+
+<sub>Live static showcase · source files in <a href="docs/site/"><code>docs/site/</code></a> · no installation required</sub>
+
+</div>
 
 ---
 
