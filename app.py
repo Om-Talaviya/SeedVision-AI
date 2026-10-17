@@ -25,6 +25,12 @@ from seedvision.data.real_review import (
     revert_specimen_review,
     save_specimen_review,
 )
+from seedvision.data.review_assist import (
+    assist_specimen,
+    compute_average_hash,
+    find_near_duplicate_groups,
+    inspect_checkpoint_compatibility,
+)
 from seedvision.evaluation.compare import compare_models
 from seedvision.inference.predictor import (
     SCIENTIFIC_LIMITATION_NOTICE,
@@ -843,8 +849,181 @@ def main():
                 else:
                     st.error(f"Missing image on disk: `{view['filename']}`")
 
+        # AI-Assisted Review (Advisory Only)
+        st.markdown("### 3. AI-Assisted Review (Advisory Only)")
+        st.caption(
+            "Optional image-quality screening and model class suggestions for this specimen. "
+            "Advisory only: this panel never assigns, overwrites, or auto-approves the human decision below."
+        )
+
+        run_assist = st.checkbox(
+            "Run AI-assisted analysis for this specimen",
+            value=False,
+            key=f"assist_run_{selected_sid}",
+            help="Runs entirely locally. No label, review status, or staging file is modified.",
+        )
+
+        if run_assist:
+            checkpoint_options = get_available_checkpoints()
+            quality_only = "None (image-quality screening only)"
+            checkpoint_choice = quality_only
+            if checkpoint_options:
+                checkpoint_choice = st.selectbox(
+                    "Model checkpoint for class suggestions (optional)",
+                    [quality_only] + [p.name for p in checkpoint_options],
+                    key=f"assist_ckpt_{selected_sid}",
+                    help="Only checkpoints whose class mapping matches the four target classes are usable.",
+                )
+
+            checkpoint_path = None
+            compatibility = None
+            if checkpoint_choice != quality_only:
+                checkpoint_path = next(p for p in checkpoint_options if p.name == checkpoint_choice)
+                compatibility = inspect_checkpoint_compatibility(checkpoint_path)
+                if not compatibility.get("compatible"):
+                    st.warning(
+                        f"Checkpoint `{checkpoint_path.name}` is not compatible "
+                        f"(reason: `{compatibility.get('reason')}`). Showing image-quality screening only."
+                    )
+                    checkpoint_path = None
+                    compatibility = None
+
+            predictor = None
+            if checkpoint_path is not None:
+                try:
+                    predictor = get_cached_predictor(str(checkpoint_path))
+                except Exception as err:
+                    st.warning(f"Could not load model weights ({err}); showing image-quality screening only.")
+                    predictor = None
+                    compatibility = None
+
+            # Near-duplicate detection across this specimen's own views (public helpers only).
+            hash_by_name = {}
+            for view in active_specimen["views"]:
+                path_str = view.get("image_path")
+                if path_str and Path(path_str).is_file():
+                    try:
+                        with Image.open(path_str) as dup_img:
+                            hash_by_name[view["filename"]] = compute_average_hash(dup_img)
+                    except Exception:
+                        continue
+            duplicate_groups = find_near_duplicate_groups(hash_by_name)
+            duplicate_names = {name for group in duplicate_groups for name in group}
+
+            try:
+                assist = assist_specimen(
+                    selected_sid,
+                    active_specimen,
+                    checkpoint_path=checkpoint_path,
+                    predictor=predictor,
+                    compatibility=compatibility,
+                    near_duplicate_filenames=duplicate_names or None,
+                )
+            except Exception as err:
+                st.error(f"AI-assisted analysis failed: {err}")
+                assist = None
+
+            if assist is not None:
+                status_icon = {"ok": "🟢", "warning": "🟡", "unusable": "🔴"}.get(assist.quality_status, "⚪")
+                a_col1, a_col2, a_col3, a_col4 = st.columns(4)
+                with a_col1:
+                    st.metric("Image Quality", f"{status_icon} {assist.quality_status}")
+                with a_col2:
+                    st.metric("Model Suggestion", assist.model_suggested_label or "unavailable")
+                with a_col3:
+                    mean_conf = f"{assist.mean_confidence:.1%}" if assist.mean_confidence is not None else "—"
+                    st.metric("Mean Confidence", mean_conf)
+                with a_col4:
+                    st.metric("Views Agree", "Yes" if assist.views_agree else "No")
+
+                if duplicate_names:
+                    st.warning(
+                        "Near-duplicate views detected ({}). Multiple views of one specimen are not "
+                        "independent evidence; treat them as a single observation.".format(
+                            ", ".join(sorted(duplicate_names))
+                        )
+                    )
+
+                for view in assist.views:
+                    quality = view["quality"]
+                    suggestion = view["suggestion"]
+                    with st.expander(f"View `{view.get('view_id')}` — {view['filename']}"):
+                        q_col, s_col = st.columns(2)
+                        with q_col:
+                            st.markdown(f"**Image quality:** `{quality['status']}`")
+                            if quality["flags"]:
+                                st.markdown("**Flags:** " + ", ".join(f"`{f}`" for f in quality["flags"]))
+                            metrics = quality.get("metrics", {})
+                            parts = []
+                            if metrics.get("width") and metrics.get("height"):
+                                parts.append(f"{metrics['width']}×{metrics['height']}px")
+                            if metrics.get("file_size_bytes"):
+                                parts.append(f"{metrics['file_size_bytes'] / 1024:.1f} KB")
+                            if metrics.get("blur_variance") is not None:
+                                parts.append(f"blur σ²={metrics['blur_variance']:.1f}")
+                            if metrics.get("brightness") is not None:
+                                parts.append(f"brightness={metrics['brightness']:.1f}")
+                            if metrics.get("contrast") is not None:
+                                parts.append(f"contrast={metrics['contrast']:.1f}")
+                            if parts:
+                                st.caption(" · ".join(parts))
+                            for reason in quality["reasons"]:
+                                st.caption(f"• {reason}")
+                        with s_col:
+                            if suggestion["available"]:
+                                st.markdown(f"**Suggested class:** `{suggestion['predicted_class']}`")
+                                if suggestion["confidence"] is not None:
+                                    st.markdown(f"**Confidence:** {suggestion['confidence']:.1%}")
+                                if suggestion.get("is_uncertain"):
+                                    st.warning(
+                                        "Uncertain: "
+                                        + (suggestion.get("uncertainty_reason") or "model confidence below threshold")
+                                    )
+                                if suggestion.get("top_k"):
+                                    st.caption(
+                                        "Top-" + str(len(suggestion["top_k"])) + ": "
+                                        + ", ".join(
+                                            "{c} ({p})".format(
+                                                c=item.get("class_name"),
+                                                p=item.get("percentage")
+                                                or f"{item.get('probability', 0.0):.1%}",
+                                            )
+                                            for item in suggestion["top_k"]
+                                        )
+                                    )
+                            else:
+                                st.markdown("**Suggested class:** unavailable")
+                                st.caption(suggestion.get("reason") or "No compatible model output.")
+
+                if not assist.views_agree and assist.conflicting_classes:
+                    st.error(
+                        "Conflicting model suggestions across views ({}). "
+                        "Do not treat views as independent specimens; resolve by human inspection.".format(
+                            ", ".join(assist.conflicting_classes)
+                        )
+                    )
+
+                rec_icon = {
+                    "accept_candidate": "✅",
+                    "inspect_closely": "🔎",
+                    "retake_image": "📷",
+                    "do_not_use": "⛔",
+                }.get(assist.recommendation, "ℹ️")
+                st.markdown(f"**Advisory recommendation:** {rec_icon} `{assist.recommendation}`")
+                if assist.recommendation_reason:
+                    st.caption(assist.recommendation_reason)
+
+                if assist.is_auto_approvable:
+                    st.error("Unexpected: automatic approval was reported as permitted. This must not occur.")
+                else:
+                    st.caption(
+                        "🔒 Automatic approval is disabled by policy; every specimen requires explicit human "
+                        "approval. Requirements for enabling it: " + "; ".join(assist.auto_approval_requirements)
+                    )
+                st.caption(assist.advisory_notice)
+
         # Review Form
-        st.markdown("### 3. Human Review & Verification Decision")
+        st.markdown("### 4. Human Review & Verification Decision")
         st.caption("Apply consistent specimen-level classification across all photographic views.")
 
         with st.form(key=f"review_form_{selected_sid}"):
@@ -941,7 +1120,7 @@ def main():
 
         # Revert & Rollback Tools
         st.markdown("---")
-        st.markdown("### 4. Specimen Revert & Manifest Rollback")
+        st.markdown("### 5. Specimen Revert & Manifest Rollback")
         rev_col1, rev_col2 = st.columns(2)
 
         with rev_col1:

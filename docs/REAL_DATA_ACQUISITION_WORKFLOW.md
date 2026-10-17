@@ -1,6 +1,6 @@
 # SeedVision AI: Real-World Dataset Acquisition & Human Annotation Protocol
 
-**Document Version:** 1.1.0  
+**Document Version:** 1.2.0  
 **Status:** Approved Operational Protocol  
 **Target Crop:** Chickpea (*Cicer arietinum L.*), Desi and Kabuli cultivars  
 **Target Defect Taxonomy:** `sound_healthy`, `discolored_spotted`, `broken_cracked`, `shrivelled_damaged`  
@@ -153,3 +153,84 @@ To prevent premature accuracy claims, the project strictly adheres to three dist
 > - **Internal Embryo Viability:** Requires biochemical 2,3,5-triphenyl tetrazolium chloride (TZ) enzymatic staining.
 > - **Moisture Content:** Requires standard air-oven drying at $130^\circ\text{C}$ or calibrated capacitive moisture meters.
 > - **Phytosanitary Certification:** Requires laboratory fungal plating or ELISA/PCR pathogen testing.
+
+---
+
+## 7. AI-Assisted Review Workflow (Advisory Only)
+
+SeedVision AI provides an **optional, advisory** review-assistance layer (`src/seedvision/data/review_assist.py`) that supports human reviewers working through the staging workflow described in Sections 3-4. It screens image quality, produces *optional* checkpoint-based class suggestions, and aggregates findings at the physical-specimen level. It never replaces the dual-review protocol in Section 3 or the strict ingestion safeguards in Section 5.
+
+> [!IMPORTANT]
+> **ADVISORY-ONLY CONTRACT:**
+> - Image-quality findings are **heuristic screening signals** and are **not** evidence of a seed's quality class.
+> - Model class suggestions come from checkpoints trained on **procedurally synthetic fixtures**. They are **not** validated real-world predictions.
+> - Reported training accuracy (e.g. a synthetic `val_acc` of 1.0) is a **synthetic-benchmark** figure and must **never** be presented as real-world grading accuracy.
+> - AI predictions **never** overwrite human labels, and no component writes staging decisions or the staging manifest.
+
+The corresponding interactive panel in `app.py` is titled **"AI-Assisted Review (Advisory Only)"**, and the API is re-exported from `src/seedvision/data/__init__.py` for programmatic use.
+
+### 7.1 Image-Quality Screening
+
+`screen_image_quality()` screens each staged view for corruption, size, focus, exposure, tonal variation, and duplication. Each finding carries a status of `ok`, `warning`, or `unusable`:
+
+- **`unusable`** - the image is unreadable/undecodable, or falls below the absolute minimum dimension (`16 px`).
+- **`warning`** - one or more non-fatal quality flags were raised.
+- **`ok`** - no quality flags were raised.
+
+| Flag | Heuristic Trigger (project-defined) | Description |
+| :--- | :--- | :--- |
+| `unreadable` | File missing or undecodable | Image file could not be located or decoded. |
+| `too_small` | Width or height `< 16 px` | Below the absolute minimum usable dimension (forces `unusable`). |
+| `low_resolution` | Width or height `< 128 px` | Below the recommended inspection resolution. |
+| `excessive_blur` | Laplacian variance `< 50.0` | Appears out of focus (low edge detail). |
+| `low_brightness` | Mean brightness `< 40.0` | Appears underexposed. |
+| `high_brightness` | Mean brightness `> 220.0` | Appears overexposed. |
+| `low_contrast` | Tonal std `< 20.0` | Appears washed out. |
+| `near_duplicate` | Average-hash Hamming distance `<= 5` | Visually near-identical to another staged view. |
+
+Recorded metrics per view: `width`, `height`, `file_size_bytes`, `blur_variance`, `brightness`, and `contrast`. Near-duplicate detection uses a 64-bit average hash (`HASH_SIZE = 8`) computed across all staged views of a specimen.
+
+> [!NOTE]
+> These thresholds are **project-defined operational proxies** (consistent with the proxy discussion in Section 1.2). They are screening heuristics for photographic usability only - **not** proof of seed quality, handling, or viability.
+
+### 7.2 Optional Checkpoint-Based Class Suggestions
+
+Class suggestions are produced **only** when a class-compatible checkpoint is available. `inspect_checkpoint_compatibility()` reports one of: `checkpoint_not_configured`, `checkpoint_not_found`, `checkpoint_unreadable`, `checkpoint_payload_invalid`, `checkpoint_missing_class_mapping`, `unknown_class_mapping`, or `compatible`. A checkpoint is compatible only when it maps **exactly** onto the four target classes (`sound_healthy`, `discolored_spotted`, `broken_cracked`, `shrivelled_damaged`).
+
+When compatible, each view is scored via `SeedPredictor.predict(..., generate_cam=False)` and yields `predicted_class`, `confidence`, `is_uncertain`, an `uncertainty_reason` when applicable, and `top_k` alternatives (default `DEFAULT_TOP_K = 4`; uncertainty threshold `0.50`). When no compatible checkpoint is present, suggestions are marked unavailable with reasons such as `image_unavailable` or `inference_failed`, and human inspection alone decides the label.
+
+### 7.3 Specimen-Level Aggregation
+
+Multiple views of one physical seed are **never** treated as independent specimens. Findings are grouped by `specimen_id`, and each specimen is summarized:
+
+- **`quality_status`** - the worst view status (`unusable` > `warning` > `ok`).
+- **`model_suggested_label`** - the class with the most view votes, breaking ties by highest mean confidence.
+- **`views_agree` / `conflicting_classes`** - whether all view suggestions agree, and which classes conflict when they do not.
+
+### 7.4 Review Recommendations
+
+Every specimen receives one advisory recommendation plus a human-readable reason:
+
+| Recommendation | Meaning |
+| :--- | :--- |
+| `accept_candidate` | Quality is acceptable and suggestions are consistent; a **human must still confirm**. |
+| `inspect_closely` | No compatible suggestion, conflicting views, and/or uncertain suggestions - review manually. |
+| `retake_image` | Quality issues make the view unsuitable - re-photograph before review. |
+| `do_not_use` | Unusable quality (e.g. unreadable/too small) - exclude from ingestion. |
+
+### 7.5 Automatic Approval Is Disabled by Default
+
+> [!CAUTION]
+> **AUTOMATIC APPROVAL IS OFF.** `AUTO_APPROVAL_ENABLED = False`. Enabling it requires an explicit configuration flag **and** documented validation evidence; **model confidence alone never authorizes approval.** Human review remains authoritative for every real-world specimen.
+
+`evaluate_auto_approval()` fails closed through an ordered guard chain, denying with: `auto_approval_module_disabled` -> `auto_approval_not_enabled_in_config` -> `documented_validation_missing` -> `quality_not_acceptable` -> `specimen_already_reviewed` -> `no_model_suggestion` -> `conflicting_view_suggestions` -> `uncertain_suggestion`. Only when every safeguard holds does it return `all_safeguards_satisfied`.
+
+### 7.6 Advisory Report Sidecar
+
+`build_assist_report()` / `assist_staging()` produce a serializable advisory report (including the model-compatibility block, near-duplicate groups, per-specimen findings, and a summary). `write_assist_report()` writes it **atomically** (default: `data/real_staging/staging_review_assist.json`, `overwrite=False`). This sidecar is a **separate advisory artifact**: it never modifies `staging_manifest.csv`, `annotations.csv`, or any staging decision. `load_assist_report()` returns `None` when no report exists.
+
+### 7.7 Preserved Safeguards & Current Real-Data Status
+
+The human-review protocol (Section 3), the metadata schema (Section 4), and the strict, group-isolated ingestion and provenance guarantees (Section 5) are **unchanged**. AI assistance is additive and non-authoritative.
+
+As of this document version, the **six real photographs across two specimens remain `pending`** - none are approved or labeled. Real-world validation is **not established**: `is_real_world_validated` remains `False`. Synthetic benchmark numbers must not be cited as real-world performance, and no real-world accuracy may be published until the Stage 2 / Stage 3 roadmap in Section 5 is executed.
