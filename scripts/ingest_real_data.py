@@ -121,8 +121,15 @@ def audit_and_ingest_real_dataset(
     seed: int = 42,
     provenance_path: Optional[Path] = None,
     annotations_file: Optional[Path] = None,
+    strict_annotations: bool = False,
 ) -> Dict:
-    """Audit images in source_dir, detect duplicates, copy to target_dir, and partition splits."""
+    """Audit images in source_dir, detect duplicates, copy to target_dir, and partition splits.
+
+    When ``strict_annotations`` is enabled, ingestion forbids deriving seed identity from
+    filenames: a reviewed annotation manifest is required, every discovered image must be
+    present in it, and every entry must carry a non-empty ``seed_id``. Any violation raises
+    ``ValueError`` instead of guessing (fail-closed).
+    """
     validator = ImageValidator(min_width=min_size, min_height=min_size)
 
     md5_to_paths = defaultdict(list)
@@ -200,6 +207,22 @@ def audit_and_ingest_real_dataset(
         print(f"  - Reviewed valid records:        {len(annot_mapping)}")
         print(f"  - Discarded ambiguous entries:   {len(discarded_ambiguous)}")
 
+    # Strict annotation enforcement (fail closed): never guess seed identity from filenames
+    if strict_annotations:
+        if not annot_mapping:
+            raise ValueError(
+                "Strict annotation mode requires a valid annotation manifest with reviewed "
+                "records, but none could be loaded. Refusing to derive seed identity from filenames."
+            )
+        missing_seed_ids = sorted(
+            fname for fname, meta in annot_mapping.items() if not meta.get("seed_id")
+        )
+        if missing_seed_ids:
+            raise ValueError(
+                "Strict annotation mode requires a non-empty seed_id for every reviewed record; "
+                f"missing for: {missing_seed_ids}"
+            )
+
     # Detect unrecognized directories in source_dir
     unrecognized_dirs = []
     for d in sorted(source_dir.iterdir()):
@@ -239,6 +262,11 @@ def audit_and_ingest_real_dataset(
             if img_path.name in [d["filename"] for d in discarded_ambiguous]:
                 continue
             if img_path.name not in annot_mapping:
+                if strict_annotations:
+                    raise ValueError(
+                        f"Strict annotation mode: image '{img_path.name}' has no reviewed annotation "
+                        "entry; refusing to derive seed identity from filename."
+                    )
                 skipped_unreviewed.append(img_path.name)
                 continue
             cls = annot_mapping[img_path.name]["class_name"]
@@ -269,6 +297,11 @@ def audit_and_ingest_real_dataset(
         # Extract physical seed ID (use explicit from CSV or stem heuristic)
         if assigned_seed_id:
             seed_id = f"{cls}_{assigned_seed_id}" if not assigned_seed_id.startswith(cls) else assigned_seed_id
+        elif strict_annotations:
+            raise ValueError(
+                f"Strict annotation mode: missing reviewed seed_id for '{img_path.name}'; "
+                "refusing to derive seed identity from filename."
+            )
         else:
             stem = img_path.stem
             if stem.startswith(cls + "_"):
@@ -485,6 +518,14 @@ def main():
         default="CC BY 4.0",
         help="Licensing information for the genuine dataset.",
     )
+    parser.add_argument(
+        "--strict-annotations",
+        action="store_true",
+        help=(
+            "Fail closed unless every discovered image has a reviewed annotation with an "
+            "explicit seed_id. Never derives seed identity from filenames."
+        ),
+    )
     args = parser.parse_args()
 
     source_dir = Path(args.source_dir)
@@ -512,6 +553,7 @@ def main():
         license_name=args.license,
         copy_files=not args.verify_only,
         annotations_file=annotations_file,
+        strict_annotations=args.strict_annotations,
     )
 
     if res.get("status") in ["empty", "insufficient_samples"]:

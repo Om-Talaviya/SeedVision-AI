@@ -45,6 +45,15 @@ __all__ = [
     "save_specimen_review",
     "revert_specimen_review",
     "restore_manifest_backup",
+    "INGEST_ANNOTATION_COLUMNS",
+    "specimen_seed_id",
+    "select_approved_specimens",
+    "build_ingest_annotations",
+    "build_annotation_dataframe",
+    "write_annotations_atomic",
+    "plan_image_staging",
+    "stage_images",
+    "build_bridge_report",
 ]
 
 from seedvision.data.real_review import (
@@ -54,6 +63,17 @@ from seedvision.data.real_review import (
     revert_specimen_review,
     save_specimen_review,
     validate_review_decision,
+)
+from seedvision.data.review_bridge import (
+    INGEST_ANNOTATION_COLUMNS,
+    build_annotation_dataframe,
+    build_bridge_report,
+    build_ingest_annotations,
+    plan_image_staging,
+    select_approved_specimens,
+    specimen_seed_id,
+    stage_images,
+    write_annotations_atomic,
 )
 
 
