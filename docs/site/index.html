@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SeedVision AI — Explainable Deep Learning Seed Quality Grader</title>
+<meta name="description" content="SeedVision AI is an explainable deep learning system for agricultural pulse seed quality grading (chickpea). Static project showcase and illustrative, clearly-simulated demo." />
+<meta name="theme-color" content="#1b5e20" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b5e20'/%3E%3Cpath d='M16 24c0-6 0-9 0-12M16 12c-3-1-5-3-5-6 3 0 5 2 5 6Zm0 0c3-1 5-3 5-6-3 0-5 2-5 6Z' fill='none' stroke='%23a7f3d0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header" id="top">
+  <div class="shell header-inner">
+    <a class="brand" href="#top" aria-label="SeedVision AI home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="30" height="30" role="img" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="7" fill="currentColor"></rect>
+          <path d="M16 24c0-6 0-9 0-12M16 12c-3-1-5-3-5-6 3 0 5 2 5 6Zm0 0c3-1 5-3 5-6-3 0-5 2-5 6Z"
+                fill="none" stroke="#a7f3d0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <strong>SeedVision AI</strong>
+        <small>Explainable Seed Quality Grader</small>
+      </span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="primaryNav" aria-label="Toggle navigation menu">
+      <span class="nav-toggle-bar" aria-hidden="true"></span>
+      <span class="nav-toggle-bar" aria-hidden="true"></span>
+      <span class="nav-toggle-bar" aria-hidden="true"></span>
+    </button>
+
+    <nav class="primary-nav" id="primaryNav" aria-label="Primary">
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#models">Models</a></li>
+        <li><a href="#gradcam">Grad-CAM</a></li>
+        <li><a href="#advisory">Review</a></li>
+        <li><a href="#demo">Demo</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#limitations">Limits</a></li>
+        <li><a class="nav-cta" href="#setup">Setup</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============================ HERO ============================ -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="shell hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Deep Learning Applications · Computer Vision · Agricultural Quality</p>
+        <h1 id="hero-title">Explainable deep&nbsp;learning for agricultural seed quality grading</h1>
+        <p class="lede">
+          SeedVision AI inspects chickpea (<em>Cicer arietinum</em> L.) seed imagery and assigns each
+          sample one of four visual quality classes — with a Grad-CAM saliency overlay showing
+          <strong>which pixels influenced the decision</strong>. Two architectures, one leakage-resistant
+          evaluation protocol, and a first-class honesty contract about what optics can and cannot measure.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#demo">Try the interactive demo</a>
+          <a class="btn btn-ghost" href="#overview">Explore the system</a>
+        </div>
+
+        <ul class="chip-row" aria-label="Project headline facts">
+          <li class="chip chip-green">4 visual quality classes</li>
+          <li class="chip chip-slate">2 architectures compared</li>
+          <li class="chip chip-amber">240 synthetic fixtures</li>
+          <li class="chip chip-slate">6 real photos pending review</li>
+        </ul>
+      </div>
+
+      <figure class="hero-figure reveal">
+        <img src="../assets/home-overview.png" width="1886" height="909" loading="eager" decoding="async"
+             alt="SeedVision AI Streamlit dashboard home page showing the crop selector, quality class cards, and system status." />
+        <figcaption>Streamlit research dashboard — Home &amp; System Overview</figcaption>
+      </figure>
+    </div>
+
+    <div class="shell">
+      <div class="callout callout-amber" role="note">
+        <span class="callout-icon" aria-hidden="true">!</span>
+        <div>
+          <strong>Scope of this website.</strong>
+          This is a static project showcase. It does <em>not</em> run the Python model. Any classification
+          shown in the demo below is a clearly-labelled <strong>simulation</strong> for interface illustration only.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PROMINENT HONESTY BAND ==================== -->
+  <section class="honesty" aria-labelledby="honesty-title">
+    <div class="shell">
+      <h2 id="honesty-title" class="honesty-title">What is — and is not — established</h2>
+      <div class="honesty-grid">
+        <article class="honesty-card">
+          <h3>Benchmark data is synthetic</h3>
+          <p>
+            All <strong>240 training images</strong> are procedurally generated verification fixtures
+            (<code>data/provenance.json</code>), not field photographs. The perfect scores reported here
+            are a <strong>software-verification result</strong>, not an agronomic accuracy claim.
+          </p>
+        </article>
+        <article class="honesty-card">
+          <h3>Real-world validation is pending</h3>
+          <p>
+            Evaluation artifacts carry <code>is_real_world_validated: false</code> and
+            <code>evaluation_type: synthetic_pipeline_verification</code>. A certified field benchmark
+            has not been run.
+          </p>
+        </article>
+        <article class="honesty-card">
+          <h3>Real photographs are unreviewed</h3>
+          <p>
+            Exactly <strong>6 real photographs</strong> (2 specimens × 3 angles) exist. All remain
+            <strong>unlabeled and pending</strong>; zero have been approved, and none were used to train
+            the models.
+          </p>
+        </article>
+        <article class="honesty-card">
+          <h3>Optics ≠ physiology</h3>
+          <p>
+            The system assesses <strong>visible surface morphology only</strong>. It cannot measure
+            germination rate, embryo vitality, moisture, or pathogen viability — those require
+            laboratory assays.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= OVERVIEW ========================= -->
+  <section class="section" id="overview" aria-labelledby="overview-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">01 — Project</p>
+        <h2 id="overview-title">A scientific-grade computer vision pipeline</h2>
+        <p class="section-lede">
+          Manual seed inspection is slow, subjective, and inconsistent between graders. SeedVision AI is a
+          production-structured reference implementation that replaces ad-hoc scripting with a modular,
+          reproducible, and explainable pipeline — while being explicit about its scientific boundary.
+        </p>
+      </header>
+
+      <div class="two-col">
+        <div class="prose">
+          <h3>The problem</h3>
+          <ul class="ticks">
+            <li>Manual visual grading is subjective and varies between inspectors.</li>
+            <li>Hand sorting cannot scale to high-throughput lot screening.</li>
+            <li>Mechanical damage and surface defects are easy to miss under inconsistent lighting.</li>
+            <li>Black-box "AI graders" provide no auditable evidence for their decisions.</li>
+          </ul>
+          <h3>The approach</h3>
+          <ul class="ticks">
+            <li>Two CNN architectures trained and compared under one identical protocol.</li>
+            <li>Deterministic preprocessing with train-time augmentation and eval-time normalization.</li>
+            <li><strong>Leakage-resistant, class-stratified group splits</strong> keyed on physical seed identity.</li>
+            <li>Grad-CAM explainability surfaced alongside every prediction, not hidden in a submenu.</li>
+          </ul>
+        </div>
+
+        <div class="class-panel">
+          <h3>Four quality classes</h3>
+          <ul class="class-list">
+            <li><span class="badge badge-healthy">sound_healthy</span> Intact testa, uniform colour.</li>
+            <li><span class="badge badge-spotted">discolored_spotted</span> Necrotic spots, staining.</li>
+            <li><span class="badge badge-cracked">broken_cracked</span> Fractures, chips, splits.</li>
+            <li><span class="badge badge-shrivelled">shrivelled_damaged</span> Wrinkling, shrunken form.</li>
+          </ul>
+          <p class="muted small">
+            A fifth staging-only state, <code>pending_review</code>, exists for unlabeled real intake —
+            it is never a classifier output.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= FEATURES ========================= -->
+  <section class="section section-alt" id="features" aria-labelledby="features-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">02 — Capabilities</p>
+        <h2 id="features-title">Engineered features</h2>
+        <p class="section-lede">Each subsystem is a small, contract-bound module with tests around its boundary.</p>
+      </header>
+
+      <div class="card-grid">
+        <article class="feature-card reveal">
+          <div class="feature-ico" aria-hidden="true">◲</div>
+          <h3>Dual architectures</h3>
+          <p>A from-scratch <strong>SeedNet-Baseline</strong> CNN and an ImageNet-pretrained <strong>MobileNetV2</strong> transfer model, built through one factory interface.</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-ico" aria-hidden="true">◎</div>
+          <h3>Grad-CAM explainability</h3>
+          <p>Gradient-weighted activation mapping with strict hook lifecycle management (context manager) to prevent memory leaks.</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-ico" aria-hidden="true">⧉</div>
+          <h3>Leakage-resistant splits</h3>
+          <p>Class-stratified group splitting keeps every physical seed entity atomic within a single partition.</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-ico" aria-hidden="true">⎔</div>
+          <h3>Input validation</h3>
+          <p>Uploads are screened for size, MIME type, and minimum dimensions before a tensor is ever built.</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-ico" aria-hidden="true">∿</div>
+          <h3>Full evaluation suite</h3>
+          <p>Accuracy, macro precision/recall/F1, per-class metrics, confusion matrices, ECE calibration, and CPU latency/throughput.</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-ico" aria-hidden="true">⚠</div>
+          <h3>Uncertainty surfacing</h3>
+          <p>Low-confidence and out-of-distribution inputs are flagged with an actionable reason instead of a silent guess.</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-ico" aria-hidden="true">⊕</div>
+          <h3>Advisory review assistant</h3>
+          <p>Optional, default-deny review aid for real intake — it can only recommend; a human always decides.</p>
+        </article>
+        <article class="feature-card reveal">
+          <div class="feature-ico" aria-hidden="true">⚙</div>
+          <h3>Reproducible &amp; tested</h3>
+          <p>Master seed <code>42</code>, YAML config cascade, atomic checkpoints, and a 99-case pytest suite.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= ARCHITECTURE ======================= -->
+  <section class="section" id="architecture" aria-labelledby="arch-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">03 — Pipeline</p>
+        <h2 id="arch-title">Architecture &amp; workflow</h2>
+        <p class="section-lede">
+          Data flows from raw imagery through validation, splitting, and PyTorch DataLoaders into the
+          training engine; checkpoints fan out to evaluation and inference; Grad-CAM and metrics surface in
+          the Streamlit dashboard and CLI tools.
+        </p>
+      </header>
+
+      <ol class="flow" role="list">
+        <li class="flow-step reveal">
+          <span class="flow-num">1</span>
+          <h3>Ingest &amp; validate</h3>
+          <p>File integrity, minimum dimensions (W,H ≥ 16), and SHA-256 deduplication across classes.</p>
+          <code>seedvision.data.validation</code>
+        </li>
+        <li class="flow-step reveal">
+          <span class="flow-num">2</span>
+          <h3>Split by identity</h3>
+          <p>Class-stratified grouped partitioning keyed on <code>seed_id</code> — no entity straddles splits.</p>
+          <code>seedvision.data.splitting</code>
+        </li>
+        <li class="flow-step reveal">
+          <span class="flow-num">3</span>
+          <h3>Augment &amp; tensorize</h3>
+          <p>Train-time rotation/flip/jitter; deterministic normalization at eval; lazy PIL decoding.</p>
+          <code>SeedDataset</code>
+        </li>
+        <li class="flow-step reveal">
+          <span class="flow-num">4</span>
+          <h3>Train</h3>
+          <p>Label-smoothed cross-entropy, cosine annealing, gradient clipping, early stopping.</p>
+          <code>SeedTrainer</code>
+        </li>
+        <li class="flow-step reveal">
+          <span class="flow-num">5</span>
+          <h3>Evaluate</h3>
+          <p>Metrics, confusion matrices, reliability diagrams, and latency profiling on the held-out split.</p>
+          <code>ModelEvaluator</code>
+        </li>
+        <li class="flow-step reveal">
+          <span class="flow-num">6</span>
+          <h3>Infer &amp; explain</h3>
+          <p>Top-K predictions, uncertainty heuristics, and Grad-CAM overlay via the predictor wrapper.</p>
+          <code>SeedPredictor · GradCAM</code>
+        </li>
+      </ol>
+
+      <div class="surface-row" aria-label="User surfaces">
+        <div class="surface">
+          <h3>Streamlit dashboard</h3>
+          <p><code>app.py</code> — multi-page research laboratory on port 8501.</p>
+        </div>
+        <div class="surface">
+          <h3>CLI tools</h3>
+          <p><code>scripts/</code> — <code>prepare_dataset</code>, <code>train</code>, <code>evaluate</code>, <code>predict</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================== MODELS ========================== -->
+  <section class="section section-alt" id="models" aria-labelledby="models-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">04 — Comparison</p>
+        <h2 id="models-title">Model comparison</h2>
+        <p class="section-lede">
+          Both architectures were evaluated on the identical held-out synthetic test partition
+          (36 fixtures, 9 per class, Intel CPU). Read every number below as
+          <strong>synthetic verification</strong> — it confirms the pipeline runs correctly, not field accuracy.
+        </p>
+      </header>
+
+      <div class="callout callout-slate" role="note">
+        <span class="callout-icon" aria-hidden="true">i</span>
+        <div>
+          The synthetic test split yields a 95% Wilson interval of <strong>[90.4%, 100%]</strong>. A single
+          error would cost 2.78% accuracy. Real deployment requires 200–500 physical photographs per evaluation.
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption class="sr-only">Synthetic-fixture verification benchmark comparison of the two architectures</caption>
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">SeedNet-Baseline <span class="th-sub">Custom CNN</span></th>
+              <th scope="col">MobileNetV2 <span class="th-sub">Transfer</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Test accuracy</th><td>100.0%</td><td>100.0%</td></tr>
+            <tr><th scope="row">Macro precision</th><td>100.0%</td><td>100.0%</td></tr>
+            <tr><th scope="row">Macro recall</th><td>100.0%</td><td>100.0%</td></tr>
+            <tr><th scope="row">Macro F1</th><td>100.0%</td><td>100.0%</td></tr>
+            <tr><th scope="row">Calibration ECE</th><td class="best">0.0251</td><td>0.0412</td></tr>
+            <tr><th scope="row">CPU latency / sample</th><td class="best">5.72 ms</td><td>13.37 ms</td></tr>
+            <tr><th scope="row">Throughput</th><td class="best">174.8 /s</td><td>74.8 /s</td></tr>
+            <tr><th scope="row">Total parameters</th><td class="best">456,228 (0.46M)</td><td>2,391,300 (2.39M)</td></tr>
+            <tr><th scope="row">Checkpoint size</th><td class="best">1.74 MB</td><td>9.11 MB</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted small">
+        <span class="best-key" aria-hidden="true"></span> marks the empirically stronger value in each row.
+        Both models output the same four classes and were validated checkpoint-compatible.
+      </p>
+
+      <div class="model-cards">
+        <article class="model-card reveal">
+          <h3>SeedNet-Baseline</h3>
+          <p class="model-tag">Custom CNN · edge-optimised</p>
+          <p>Four conv blocks (3→32→64→128→256), LeakyReLU, adaptive average pooling to 256-d, dropout 0.35, head to 4 classes. 2.3× faster and 5.2× more compact — the throughput pick for high-speed sorting.</p>
+        </article>
+        <article class="model-card reveal">
+          <h3>MobileNetV2-Transfer</h3>
+          <p class="model-tag">Transfer learning · ImageNet-pretrained</p>
+          <p>Inverted residual blocks with depthwise separable convolutions, custom classification head with dropout 0.30 and a reduced fine-tuning learning rate (3×10⁻⁴).</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= GRAD-CAM ========================= -->
+  <section class="section" id="gradcam" aria-labelledby="cam-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">05 — Explainability</p>
+        <h2 id="cam-title">Grad-CAM saliency</h2>
+        <p class="section-lede">
+          Predictions arrive with their evidence. Grad-CAM pools the gradient of the predicted class score
+          over the final convolutional feature map, rectifies it with ReLU, normalises it, and blends the
+          result over the input as an alpha overlay.
+        </p>
+      </header>
+
+      <div class="cam-grid">
+        <div class="cam-steps">
+          <div class="cam-step">
+            <h3>Original specimen</h3>
+            <p>Cropped RGB view of the seed under analysis.</p>
+          </div>
+          <div class="cam-step">
+            <h3>Activation heatmap</h3>
+            <p>Jet-colormapped saliency normalised to [0, 1] at the last conv layer.</p>
+          </div>
+          <div class="cam-step">
+            <h3>Blended overlay</h3>
+            <p>45% alpha blend highlighting the fracture or lesion region.</p>
+          </div>
+        </div>
+
+        <figure class="cam-figure reveal">
+          <img src="../assets/seed-quality-analysis.png" width="1893" height="894" loading="lazy" decoding="async"
+               alt="Seed Quality Analysis page showing model selection, KPI cards, a probability bar chart and the Grad-CAM visual triplet." />
+          <figcaption>Seed Quality Analysis — inference KPIs and the Grad-CAM visual triplet.</figcaption>
+        </figure>
+      </div>
+
+      <div class="formula-row">
+        <div class="formula">
+          <span class="formula-label">Weights</span>
+          <code>α<sub>k</sub><sup>c</sup> = (1/Z) Σ<sub>i,j</sub> ∂y<sup>c</sup> / ∂A<sup>k</sup><sub>ij</sub></code>
+        </div>
+        <div class="formula">
+          <span class="formula-label">Map</span>
+          <code>L<sup>c</sup> = ReLU( Σ<sub>k</sub> α<sub>k</sub><sup>c</sup> A<sup>k</sup> )</code>
+        </div>
+        <div class="formula">
+          <span class="formula-label">Overlay</span>
+          <code>α·Heatmap<sub>RGB</sub> + (1−α)·Image<sub>RGB</sub></code>
+        </div>
+      </div>
+
+      <div class="callout callout-amber" role="note">
+        <span class="callout-icon" aria-hidden="true">!</span>
+        <div>
+          <strong>Associative, not causal.</strong> Grad-CAM shows regions whose activations correlate with the
+          output logit. Heatmaps are computed at a coarse feature map (e.g. 4×4–8×8) and upscaled bilinearly,
+          so fine crack edges appear diffused.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= ADVISORY ========================= -->
+  <section class="section section-alt" id="advisory" aria-labelledby="adv-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">06 — Real-data workflow</p>
+        <h2 id="adv-title">Advisory review assistant</h2>
+        <p class="section-lede">
+          When real photographs enter staging they are <code>pending_review</code> and contribute nothing to
+          training until a human decides. The review assistant can <em>recommend</em>, but it can never approve.
+        </p>
+      </header>
+
+      <div class="adv-grid">
+        <div class="adv-points">
+          <div class="adv-point">
+            <h3>Default-deny by construction</h3>
+            <p>Auto-approval is hard-disabled (<code>AUTO_APPROVAL_ENABLED = False</code>). The recommendation chain fails closed.</p>
+          </div>
+          <div class="adv-point">
+            <h3>Quality screening</h3>
+            <p>Blur (Laplacian variance), perceptual near-duplicate hashing, and checkpoint-compatibility checks surface advisories.</p>
+          </div>
+          <div class="adv-point">
+            <h3>Human label preserved</h3>
+            <p>A reviewer's decision always wins; assistance never overwrites a human grade or writes to the manifest.</p>
+          </div>
+          <div class="adv-point">
+            <h3>Read-only staging</h3>
+            <p>The staging manifest stays <code>pending</code>; the assistant emits an advisory sidecar only.</p>
+          </div>
+        </div>
+
+        <div class="adv-figures">
+          <figure class="reveal">
+            <img src="../assets/human-review.png" width="1861" height="890" loading="lazy" decoding="async"
+                 alt="Multi-view specimen angle gallery used during human review." />
+            <figcaption>Multi-view specimen angle gallery.</figcaption>
+          </figure>
+          <figure class="reveal">
+            <img src="../assets/model-inspection.png" width="1867" height="906" loading="lazy" decoding="async"
+                 alt="Human review decision form with manifest rollback controls." />
+            <figcaption>Human review decision form &amp; manifest rollback.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================== DEMO =========================== -->
+  <section class="section" id="demo" aria-labelledby="demo-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">07 — Interactive</p>
+        <h2 id="demo-title">Illustrative demo <span class="sim-badge">Simulated</span></h2>
+        <p class="section-lede">
+          Pick one of the bundled sample seeds or upload your own image. The demo runs lightweight
+          <strong>in-browser</strong> image-quality checks and returns a plainly-labelled
+          <strong>simulated</strong> class suggestion. It is <em>not</em> the trained network and makes no
+          accuracy claim.
+        </p>
+      </header>
+
+      <div class="demo" id="demoApp">
+        <div class="demo-panel">
+          <h3 class="demo-h3">1 · Choose an image</h3>
+          <div class="sample-row" role="group" aria-label="Bundled sample seeds">
+            <button type="button" class="sample" data-sample="healthy">
+              <span class="swatch swatch-healthy" aria-hidden="true"></span>Sample A
+            </button>
+            <button type="button" class="sample" data-sample="spotted">
+              <span class="swatch swatch-spotted" aria-hidden="true"></span>Sample B
+            </button>
+            <button type="button" class="sample" data-sample="cracked">
+              <span class="swatch swatch-cracked" aria-hidden="true"></span>Sample C
+            </button>
+            <button type="button" class="sample" data-sample="shrivelled">
+              <span class="swatch swatch-shrivelled" aria-hidden="true"></span>Sample D
+            </button>
+          </div>
+
+          <label class="file-drop" for="fileInput">
+            <span class="file-drop-ico" aria-hidden="true">⬆</span>
+            <span class="file-drop-text">…or upload an image (PNG / JPG)</span>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" />
+          </label>
+
+          <p class="muted small">
+            Bundled samples are synthetic colour swatches drawn in-browser for illustration.
+            Nothing you select is uploaded anywhere.
+          </p>
+        </div>
+
+        <div class="demo-panel">
+          <h3 class="demo-h3">2 · Preview</h3>
+          <div class="preview-frame">
+            <canvas id="previewCanvas" width="320" height="320" role="img"
+                    aria-label="Preview of the selected or uploaded image"></canvas>
+            <p class="preview-empty" id="previewEmpty">No image selected yet.</p>
+          </div>
+        </div>
+
+        <div class="demo-panel demo-output" aria-live="polite">
+          <h3 class="demo-h3">3 · Analysis <span class="sim-badge">Simulated</span></h3>
+
+          <div class="kpi-grid">
+            <div class="kpi">
+              <span class="kpi-label">Simulated grade</span>
+              <span class="kpi-value" id="kpiClass">—</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">Quality status</span>
+              <span class="kpi-value" id="kpiQuality">—</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">Resolution</span>
+              <span class="kpi-value" id="kpiRes">—</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">Brightness</span>
+              <span class="kpi-value" id="kpiBright">—</span>
+            </div>
+          </div>
+
+          <h4 class="demo-h4">Image-quality findings</h4>
+          <ul class="findings" id="findings">
+            <li class="finding finding-idle">Select an image to run the checks.</li>
+          </ul>
+
+          <div class="callout callout-slate demo-note" role="note">
+            <span class="callout-icon" aria-hidden="true">i</span>
+            <div>
+              Outputs come from a deterministic placeholder heuristic over pixel statistics — deliberately
+              generic. The real grader is a trained CNN whose results can only be produced by the Python
+              runtime.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================== GALLERY ========================== -->
+  <section class="section section-alt" id="gallery" aria-labelledby="gal-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">08 — Gallery</p>
+        <h2 id="gal-title">Interface gallery</h2>
+        <p class="section-lede">Selected screens from the Streamlit research dashboard. Click any image to enlarge.</p>
+      </header>
+
+      <div class="gallery" id="galleryGrid">
+        <button class="shot reveal" data-full="../assets/home-overview.png" data-title="Home &amp; System Overview Dashboard">
+          <img src="../assets/home-overview.png" width="1886" height="909" loading="lazy" decoding="async" alt="Home and system overview dashboard." />
+          <span class="shot-cap">Home &amp; System Overview Dashboard</span>
+        </button>
+        <button class="shot reveal" data-full="../assets/seed-quality-analysis.png" data-title="Seed Quality Analysis &amp; Model Selection Interface">
+          <img src="../assets/seed-quality-analysis.png" width="1893" height="894" loading="lazy" decoding="async" alt="Seed quality analysis and model selection interface." />
+          <span class="shot-cap">Seed Quality Analysis &amp; Model Selection</span>
+        </button>
+        <button class="shot reveal" data-full="../assets/methodology.png" data-title="Cross-Architecture Benchmark Summary &amp; Latency Comparison">
+          <img src="../assets/methodology.png" width="1883" height="892" loading="lazy" decoding="async" alt="Cross-architecture benchmark summary and latency comparison." />
+          <span class="shot-cap">Benchmark Summary &amp; Latency Comparison</span>
+        </button>
+        <button class="shot reveal" data-full="../assets/benchmark-summary.png" data-title="Per-Architecture Evaluation &amp; Confusion Matrices">
+          <img src="../assets/benchmark-summary.png" width="1818" height="887" loading="lazy" decoding="async" alt="Per-architecture evaluation and confusion matrices." />
+          <span class="shot-cap">Evaluation &amp; Confusion Matrices</span>
+        </button>
+        <button class="shot reveal" data-full="../assets/benchmark-visualization.png" data-title="Scientific Methodology — Agricultural Defect Taxonomy">
+          <img src="../assets/benchmark-visualization.png" width="1882" height="906" loading="lazy" decoding="async" alt="Scientific methodology and agricultural defect taxonomy." />
+          <span class="shot-cap">Methodology &amp; Defect Taxonomy</span>
+        </button>
+        <button class="shot reveal" data-full="../assets/human-review.png" data-title="Multi-View Specimen Angle Gallery">
+          <img src="../assets/human-review.png" width="1861" height="890" loading="lazy" decoding="async" alt="Multi-view specimen angle gallery." />
+          <span class="shot-cap">Multi-View Specimen Angle Gallery</span>
+        </button>
+        <button class="shot reveal" data-full="../assets/model-inspection.png" data-title="Human Review Decision Form &amp; Manifest Rollback">
+          <img src="../assets/model-inspection.png" width="1867" height="906" loading="lazy" decoding="async" alt="Human review decision form and manifest rollback." />
+          <span class="shot-cap">Review Decision Form &amp; Manifest Rollback</span>
+        </button>
+        <button class="shot reveal" data-full="../assets/real-data-staging.png" data-title="Real Data Staging &amp; Intake Statistics">
+          <img src="../assets/real-data-staging.png" width="1895" height="895" loading="lazy" decoding="async" alt="Real data staging and intake statistics." />
+          <span class="shot-cap">Real Data Staging &amp; Intake Statistics</span>
+        </button>
+        <button class="shot reveal" data-full="../assets/specimen-gallery.png" data-title="Specimen Metadata &amp; Provenance Audit">
+          <img src="../assets/specimen-gallery.png" width="1874" height="912" loading="lazy" decoding="async" alt="Specimen metadata and provenance audit." />
+          <span class="shot-cap">Specimen Metadata &amp; Provenance Audit</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= LIMITATIONS ========================= -->
+  <section class="section" id="limitations" aria-labelledby="lim-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">09 — Boundaries</p>
+        <h2 id="lim-title">Scientific limitations</h2>
+        <p class="section-lede">
+          The most important section on this page. Computer vision reads visible morphology; it cannot read
+          biochemistry.
+        </p>
+      </header>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption class="sr-only">Which properties are detectable by computer vision versus which require laboratory assays</caption>
+          <thead>
+            <tr>
+              <th scope="col">Property</th>
+              <th scope="col">Detectable by SeedVision AI</th>
+              <th scope="col">Requires laboratory assay</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">External testa integrity</th><td class="yes">Yes</td><td class="no">—</td></tr>
+            <tr><th scope="row">Surface pigmentation</th><td class="yes">Yes</td><td class="no">—</td></tr>
+            <tr><th scope="row">Gross morphology</th><td class="yes">Yes</td><td class="no">—</td></tr>
+            <tr><th scope="row">Insect boreholes</th><td class="yes">Yes</td><td class="no">—</td></tr>
+            <tr><th scope="row">Germination rate</th><td class="no">No</td><td>Germination blotter test</td></tr>
+            <tr><th scope="row">Embryo vitality</th><td class="no">No</td><td>Tetrazolium (TZ) staining</td></tr>
+            <tr><th scope="row">Moisture content</th><td class="no">No</td><td>Oven-dry / NIR meter</td></tr>
+            <tr><th scope="row">Pathogen viability</th><td class="no">No</td><td>Agar culture / PCR</td></tr>
+            <tr><th scope="row">Lot certification</th><td class="no">No</td><td>Official seed agency (ISTA/AOSCA)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="lim-list">
+        <li><strong>Species-restricted.</strong> Trained for chickpea only; other species produce out-of-distribution errors.</li>
+        <li><strong>Lighting-sensitive.</strong> Coloured light, harsh shadows, or textured backgrounds degrade accuracy.</li>
+        <li><strong>Coarse heatmaps.</strong> Grad-CAM resolution limits localisation of fine cracks.</li>
+        <li><strong>Never certification.</strong> Outputs are never official seed testing or safety guarantees.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- =========================== SETUP =========================== -->
+  <section class="section section-dark" id="setup" aria-labelledby="setup-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">10 — Run it locally</p>
+        <h2 id="setup-title">Setup &amp; links</h2>
+        <p class="section-lede">Clone the repository and launch the full Streamlit dashboard to run the real models.</p>
+      </header>
+
+      <div class="setup-grid">
+        <div class="setup-block">
+          <h3>Quick start</h3>
+          <pre class="code" aria-label="Quick start commands"><code>git clone https://github.com/Om-Talaviya/SeedVision-AI.git
+cd SeedVision-AI
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+python -m pip install -r requirements.txt
+python scripts/prepare_dataset.py
+python scripts/train.py --config configs/transfer_learning.yaml
+streamlit run app.py          # http://localhost:8501</code></pre>
+          <p class="muted small">Requires Python 3.10–3.13 and PyTorch 2.2+. CPU is the default; CUDA is auto-detected.</p>
+        </div>
+
+        <div class="setup-block">
+          <h3>Evaluate a checkpoint</h3>
+          <pre class="code" aria-label="Evaluation commands"><code>python scripts/evaluate.py \
+  --checkpoint artifacts/checkpoints/best_SeedNet-Baseline.pt
+
+python scripts/evaluate.py \
+  --checkpoint artifacts/checkpoints/best_MobileNetV2-Transfer.pt</code></pre>
+          <ul class="link-list">
+            <li>
+              <a href="https://github.com/Om-Talaviya/SeedVision-AI" rel="noopener">Repository &amp; source on GitHub</a>
+            </li>
+            <li>
+              <a href="https://github.com/Om-Talaviya/SeedVision-AI/blob/main/README.md" rel="noopener">README &amp; install instructions</a>
+            </li>
+            <li>
+              <a href="https://github.com/Om-Talaviya/SeedVision-AI/blob/main/docs/PROJECT_OVERVIEW.md" rel="noopener">Project overview</a>
+            </li>
+            <li>
+              <a href="https://github.com/Om-Talaviya/SeedVision-AI/blob/main/docs/METHODOLOGY.md" rel="noopener">Scientific methodology</a>
+            </li>
+            <li>
+              <a href="https://github.com/Om-Talaviya/SeedVision-AI/blob/main/docs/LIMITATIONS.md" rel="noopener">Limitations &amp; responsible-AI statement</a>
+            </li>
+            <li>
+              <a href="https://github.com/Om-Talaviya/SeedVision-AI/blob/main/docs/REAL_DATA_ACQUISITION_WORKFLOW.md" rel="noopener">Real-data acquisition workflow</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="shell footer-inner">
+    <div class="footer-brand">
+      <span class="brand-mark brand-mark-sm" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="7" fill="currentColor"></rect>
+          <path d="M16 24c0-6 0-9 0-12M16 12c-3-1-5-3-5-6 3 0 5 2 5 6Zm0 0c3-1 5-3 5-6-3 0-5 2-5 6Z"
+                fill="none" stroke="#a7f3d0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+      <div>
+        <strong>SeedVision AI</strong>
+        <p class="muted small">
+          Static showcase · Illustrative demo only · Optical morphology, not physiological viability.
+        </p>
+      </div>
+    </div>
+    <p class="footer-note">
+      MIT licensed. Not an official seed-testing or certification service.
+    </p>
+  </div>
+</footer>
+
+<!-- ============================ LIGHTBOX ============================ -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lightboxTitle" hidden>
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close image viewer">&times;</button>
+    <img id="lightboxImg" src="" alt="" />
+    <p class="lightbox-cap" id="lightboxTitle"></p>
+  </div>
+</div>
+
+<script src="app.js" defer></script>
+</body>
+</html>
