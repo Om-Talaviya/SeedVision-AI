@@ -52,8 +52,10 @@
 
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
         var el = entry.target;
+        /* Reveal when intersecting, or when a deep link or a restored
+           scroll position already carried the page past this element. */
+        if (!entry.isIntersecting && entry.boundingClientRect.top >= 0) return;
         var siblings = Array.prototype.slice.call(el.parentNode.children);
         var index = siblings.indexOf(el);
         var delay = Math.min(index, 6) * 70;
@@ -64,6 +66,23 @@
     }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
 
     items.forEach(function (el) { observer.observe(el); });
+
+    /* Catch-up for deep links, restored scroll positions, and instant jumps:
+       the observer never reports an element that was already above the
+       viewport when it first ran, so reveal anything scrolled fully past. */
+    function catchUp() {
+      items.forEach(function (el) {
+        if (el.classList.contains("is-visible")) return;
+        if (el.getBoundingClientRect().bottom <= 0) {
+          el.classList.add("is-visible");
+          observer.unobserve(el);
+        }
+      });
+    }
+
+    window.addEventListener("load", catchUp);
+    window.addEventListener("scroll", catchUp, { passive: true });
+    catchUp();
   }
 
   /* ------------------------------------------------------------- lightbox */
@@ -123,6 +142,64 @@
         first.focus();
       }
     });
+  }
+
+  /* ------------------------------------------------------- scroll UI ---- */
+  function initScrollUI() {
+    var bar = document.querySelector(".scroll-progress span");
+    var toTop = document.getElementById("toTop");
+    var sections = Array.prototype.slice
+      .call(document.querySelectorAll("#primaryNav a[href^='#']"))
+      .map(function (link) {
+        return { link: link, section: document.getElementById(link.getAttribute("href").slice(1)) };
+      })
+      .filter(function (item) { return item.section; });
+
+    var latest = window.scrollY || document.documentElement.scrollTop || 0;
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+
+      var doc = document.documentElement;
+      var max = doc.scrollHeight - window.innerHeight;
+      var progress = max > 0 ? (latest / max) * 100 : 0;
+      if (bar) bar.style.width = Math.max(0, Math.min(100, progress)) + "%";
+
+      if (toTop) toTop.classList.toggle("is-visible", latest > window.innerHeight * 0.6);
+
+      if (sections.length) {
+        var probe = Math.round(window.innerHeight * 0.3);
+        var current = sections[0];
+        sections.forEach(function (item) {
+          if (item.section.getBoundingClientRect().top <= probe) current = item;
+        });
+        if (latest + window.innerHeight >= doc.scrollHeight - 4) {
+          current = sections[sections.length - 1];
+        }
+        sections.forEach(function (item) {
+          item.link.classList.toggle("is-active", item === current);
+        });
+      }
+    }
+
+    function onScroll() {
+      latest = window.scrollY || document.documentElement.scrollTop || 0;
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    if (toTop) {
+      toTop.addEventListener("click", function () {
+        window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+      });
+    }
+
+    update();
   }
 
   /* ----------------------------------------------------- simulated demo --- */
@@ -212,6 +289,22 @@
       ctx.fillStyle = sheen;
       ctx.fillRect(0, 0, size, size);
     }
+
+    /* Deterministic fine surface grain — real photographed seed surfaces carry
+       micro-texture, so every swatch gets a low-amplitude speckle. */
+    var gseed = { healthy: 11, spotted: 29, cracked: 47, shrivelled: 83 }[kind] || 7;
+    for (var g = 0; g < 900; g++) {
+      gseed = (Math.imul(gseed, 1103515245) + 12345) & 0x7fffffff;
+      var gx = (gseed / 0x7fffffff) * size;
+      gseed = (Math.imul(gseed, 1103515245) + 12345) & 0x7fffffff;
+      var gy = (gseed / 0x7fffffff) * size;
+      gseed = (Math.imul(gseed, 1103515245) + 12345) & 0x7fffffff;
+      var gr = 0.6 + (gseed / 0x7fffffff) * 1.8;
+      ctx.fillStyle = (g % 2) ? "rgba(60, 44, 16, 0.18)" : "rgba(255, 246, 214, 0.16)";
+      ctx.beginPath();
+      ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   /* Fit an arbitrary image into the working canvas (object-fit: cover). */
@@ -288,10 +381,10 @@
   /* Deterministic placeholder grade from pixel statistics.
      Deliberately generic — it is NOT the trained CNN and cannot be. */
   function suggestGrade(stats) {
-    if (stats.sharpness > 900) return "cracked";
-    if (stats.darkFraction > 0.09) return "spotted";
+    if (stats.sharpness > 1100 && stats.darkFraction < 0.06) return "cracked";
     if (stats.brightness < 118 && stats.contrast < 46) return "shrivelled";
-    if (stats.contrast > 34 && stats.brightness > 130) return "healthy";
+    if (stats.darkFraction > 0.09) return "spotted";
+    if (stats.brightness > 150 && stats.contrast < 30) return "healthy";
     return "shrivelled";
   }
 
@@ -368,6 +461,10 @@
       el.quality.textContent = checks.worst === "fail" ? "Screening failed"
         : checks.worst === "warn" ? "Acceptable with warnings"
         : "Passed screening";
+      el.quality.classList.remove("is-pass", "is-warn", "is-fail");
+      el.quality.classList.add(
+        checks.worst === "fail" ? "is-fail" : checks.worst === "warn" ? "is-warn" : "is-pass"
+      );
     }
     if (el.res) el.res.textContent = width + " × " + height;
     if (el.bright) el.bright.textContent = Math.round(stats.brightness) + " / 255";
@@ -426,14 +523,16 @@
       });
     }
 
-    drawSample("healthy");
-    if (el.empty) el.empty.hidden = true;
+    /* Start on the designed empty state; the preview stays blank (the frame
+       gradient shows through) until the visitor picks a sample or uploads. */
+    if (el.empty) el.empty.hidden = false;
   }
 
   /* ------------------------------------------------------------------ boot */
   function boot() {
     initNav();
     initReveal();
+    initScrollUI();
     initLightbox();
     initDemo();
   }
