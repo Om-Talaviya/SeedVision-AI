@@ -845,6 +845,10 @@ main {
   line-height: 1.72;
 }
 
+.prose h3:not(:first-child) {
+  margin-top: var(--sp-6);
+}
+
 .ticks {
   list-style: none;
   margin: var(--sp-6) 0 0;
@@ -1288,9 +1292,9 @@ main {
 
 .cam-figure img {
   width: 100%;
-  border-radius: var(--r-lg);
+  border-radius: var(--r);
   border: 1px solid var(--line);
-  box-shadow: var(--sh-md);
+  box-shadow: var(--sh-sm);
   background: var(--paper);
 }
 
@@ -1345,8 +1349,8 @@ main {
 }
 
 .adv-point {
-  display: flex;
-  gap: var(--sp-4);
+  display: grid;
+  gap: var(--sp-2);
   padding: var(--sp-5);
   border-radius: var(--r);
   background: var(--paper);
@@ -1370,7 +1374,6 @@ main {
 
 .adv-point h3 {
   font-size: 0.9375rem;
-  margin-bottom: 0.15rem;
 }
 
 .adv-point p {
