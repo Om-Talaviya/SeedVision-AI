@@ -69,6 +69,12 @@
           evaluation protocol, and a first-class honesty contract about what optics can and cannot measure.
         </p>
 
+        <figure class="hero-figure reveal">
+          <img src="../assets/home-overview.png" width="1886" height="909" loading="eager" decoding="async"
+               alt="SeedVision AI Streamlit dashboard home page showing the crop selector, quality class cards, and system status." />
+          <figcaption>Streamlit research dashboard — Home &amp; System Overview</figcaption>
+        </figure>
+
         <div class="hero-actions">
           <a class="btn btn-primary" href="#demo">Try the interactive demo</a>
           <a class="btn btn-ghost" href="#overview">Explore the system</a>
@@ -93,12 +99,6 @@
           </li>
         </ul>
       </div>
-
-      <figure class="hero-figure reveal">
-        <img src="../assets/home-overview.png" width="1886" height="909" loading="eager" decoding="async"
-             alt="SeedVision AI Streamlit dashboard home page showing the crop selector, quality class cards, and system status." />
-        <figcaption>Streamlit research dashboard — Home &amp; System Overview</figcaption>
-      </figure>
     </div>
 
     <div class="shell">
@@ -158,34 +158,15 @@
   <section class="section" id="overview" aria-labelledby="overview-title">
     <div class="shell">
       <div class="two-col">
-        <div class="overview-copy">
-          <header class="section-head">
-            <p class="eyebrow">01 — Project</p>
-            <h2 id="overview-title">A scientific-grade computer vision pipeline</h2>
-            <p class="section-lede">
-              Manual seed inspection is slow, subjective, and inconsistent between graders. SeedVision AI is a
-              production-structured reference implementation that replaces ad-hoc scripting with a modular,
-              reproducible, and explainable pipeline — while being explicit about its scientific boundary.
-            </p>
-          </header>
-
-          <div class="prose">
-            <h3>The problem</h3>
-            <ul class="ticks">
-              <li>Manual visual grading is subjective and varies between inspectors.</li>
-              <li>Hand sorting cannot scale to high-throughput lot screening.</li>
-              <li>Mechanical damage and surface defects are easy to miss under inconsistent lighting.</li>
-              <li>Black-box "AI graders" provide no auditable evidence for their decisions.</li>
-            </ul>
-            <h3>The approach</h3>
-            <ul class="ticks">
-              <li>Two CNN architectures trained and compared under one identical protocol.</li>
-              <li>Deterministic preprocessing with train-time augmentation and eval-time normalization.</li>
-              <li><strong>Leakage-resistant, class-stratified group splits</strong> keyed on physical seed identity.</li>
-              <li>Grad-CAM explainability surfaced alongside every prediction, not hidden in a submenu.</li>
-            </ul>
-          </div>
-        </div>
+        <header class="section-head">
+          <p class="eyebrow">01 — Project</p>
+          <h2 id="overview-title">A scientific-grade computer vision pipeline</h2>
+          <p class="section-lede">
+            Manual seed inspection is slow, subjective, and inconsistent between graders. SeedVision AI is a
+            production-structured reference implementation that replaces ad-hoc scripting with a modular,
+            reproducible, and explainable pipeline — while being explicit about its scientific boundary.
+          </p>
+        </header>
 
         <div class="class-panel">
           <h3>Four quality classes</h3>
@@ -223,6 +204,27 @@
             A fifth staging-only state, <code>pending_review</code>, exists for unlabeled real intake —
             it is never a classifier output.
           </p>
+        </div>
+
+        <div class="prose">
+          <div class="overview-topic">
+            <h3>The problem</h3>
+            <ul class="ticks">
+              <li>Manual visual grading is subjective and varies between inspectors.</li>
+              <li>Hand sorting cannot scale to high-throughput lot screening.</li>
+              <li>Mechanical damage and surface defects are easy to miss under inconsistent lighting.</li>
+              <li>Black-box "AI graders" provide no auditable evidence for their decisions.</li>
+            </ul>
+          </div>
+          <div class="overview-topic">
+            <h3>The approach</h3>
+            <ul class="ticks">
+              <li>Two CNN architectures trained and compared under one identical protocol.</li>
+              <li>Deterministic preprocessing with train-time augmentation and eval-time normalization.</li>
+              <li><strong>Leakage-resistant, class-stratified group splits</strong> keyed on physical seed identity.</li>
+              <li>Grad-CAM explainability surfaced alongside every prediction, not hidden in a submenu.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -426,20 +428,6 @@
             </p>
           </header>
 
-          <div class="cam-steps">
-            <div class="cam-step">
-              <h3>Original specimen</h3>
-              <p>Cropped RGB view of the seed under analysis.</p>
-            </div>
-            <div class="cam-step">
-              <h3>Activation heatmap</h3>
-              <p>Jet-colormapped saliency normalised to [0, 1] at the last conv layer.</p>
-            </div>
-            <div class="cam-step">
-              <h3>Blended overlay</h3>
-              <p>45% alpha blend highlighting the fracture or lesion region.</p>
-            </div>
-          </div>
         </div>
 
         <figure class="cam-figure reveal">
@@ -447,6 +435,21 @@
                alt="Seed Quality Analysis page showing model selection, KPI cards, a probability bar chart and the Grad-CAM visual triplet." />
           <figcaption>Seed Quality Analysis — inference KPIs and the Grad-CAM visual triplet.</figcaption>
         </figure>
+      </div>
+
+      <div class="cam-steps">
+        <div class="cam-step">
+          <h3>Original specimen</h3>
+          <p>Cropped RGB view of the seed under analysis.</p>
+        </div>
+        <div class="cam-step">
+          <h3>Activation heatmap</h3>
+          <p>Jet-colormapped saliency normalised to [0, 1] at the last conv layer.</p>
+        </div>
+        <div class="cam-step">
+          <h3>Blended overlay</h3>
+          <p>45% alpha blend highlighting the fracture or lesion region.</p>
+        </div>
       </div>
 
       <div class="formula-row">
@@ -489,24 +492,6 @@
             </p>
           </header>
 
-          <div class="adv-points">
-            <div class="adv-point">
-              <h3>Default-deny by construction</h3>
-              <p>Auto-approval is hard-disabled (<code>AUTO_APPROVAL_ENABLED = False</code>). The recommendation chain fails closed.</p>
-            </div>
-            <div class="adv-point">
-              <h3>Quality screening</h3>
-              <p>Blur (Laplacian variance), perceptual near-duplicate hashing, and checkpoint-compatibility checks surface advisories.</p>
-            </div>
-            <div class="adv-point">
-              <h3>Human label preserved</h3>
-              <p>A reviewer's decision always wins; assistance never overwrites a human grade or writes to the manifest.</p>
-            </div>
-            <div class="adv-point">
-              <h3>Read-only staging</h3>
-              <p>The staging manifest stays <code>pending</code>; the assistant emits an advisory sidecar only.</p>
-            </div>
-          </div>
         </div>
 
         <div class="adv-figures">
@@ -520,6 +505,25 @@
                  alt="Human review decision form with manifest rollback controls." />
             <figcaption>Human review decision form &amp; manifest rollback.</figcaption>
           </figure>
+        </div>
+      </div>
+
+      <div class="adv-points">
+        <div class="adv-point">
+          <h3>Default-deny by construction</h3>
+          <p>Auto-approval is hard-disabled (<code>AUTO_APPROVAL_ENABLED = False</code>). The recommendation chain fails closed.</p>
+        </div>
+        <div class="adv-point">
+          <h3>Quality screening</h3>
+          <p>Blur (Laplacian variance), perceptual near-duplicate hashing, and checkpoint-compatibility checks surface advisories.</p>
+        </div>
+        <div class="adv-point">
+          <h3>Human label preserved</h3>
+          <p>A reviewer's decision always wins; assistance never overwrites a human grade or writes to the manifest.</p>
+        </div>
+        <div class="adv-point">
+          <h3>Read-only staging</h3>
+          <p>The staging manifest stays <code>pending</code>; the assistant emits an advisory sidecar only.</p>
         </div>
       </div>
     </div>

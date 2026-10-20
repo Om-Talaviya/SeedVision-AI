@@ -365,6 +365,20 @@ main {
   color: #bcd6c4;
 }
 
+/* Single-column visual sections: give the description a comfortable
+   measure instead of squeezing it into the old two-column width. */
+#overview .section-head,
+#gradcam .section-head,
+#advisory .section-head {
+  max-width: 74ch;
+}
+
+#overview .section-lede,
+#gradcam .section-lede,
+#advisory .section-lede {
+  max-width: 70ch;
+}
+
 /* --------------------------------------------------- 5. Buttons/links --- */
 .btn {
   --btn-bg: var(--green-800);
@@ -647,14 +661,14 @@ main {
 }
 
 .hero-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
-  gap: clamp(2.5rem, 6vw, 5rem);
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 5vw, 4rem);
+  align-items: stretch;
 }
 
 .hero-copy {
-  max-width: 40rem;
+  max-width: 72rem;
 }
 
 .hero h1 .accent {
@@ -662,7 +676,7 @@ main {
 }
 
 .hero h1 {
-  font-size: clamp(3.1rem, 3.2vw + 1.25rem, 4.15rem);
+  font-size: clamp(3rem, 2.8vw + 1.3rem, 4rem);
 }
 
 .hero .lede {
@@ -670,7 +684,7 @@ main {
   font-size: var(--fs-md);
   line-height: 1.7;
   color: var(--ink-soft);
-  max-width: 52ch;
+  max-width: 68ch;
   text-wrap: pretty;
 }
 
@@ -723,11 +737,13 @@ main {
 }
 
 .hero-figure {
-  margin: 0;
+  margin: var(--sp-8) 0 0;
   position: relative;
+  width: 100%;
 }
 
 .hero-figure img {
+  display: block;
   width: 100%;
   height: auto;
   border-radius: var(--r-lg);
@@ -837,32 +853,37 @@ main {
 
 /* ------------------------------------------ 9. Overview & class panel --- */
 .two-col {
-  display: grid;
-  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
-  gap: clamp(2.5rem, 6vw, 5rem);
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-10);
+  align-items: stretch;
 }
 
-.overview-copy,
 .cam-copy,
 .adv-copy {
+  width: 100%;
+  max-width: 72rem;
   min-width: 0;
 }
 
 .two-col .section-head,
 .cam-grid .section-head,
 .adv-grid .section-head {
-  margin-bottom: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 0;
 }
 
 .prose {
-  max-width: var(--measure);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-10);
+  max-width: 72rem;
+  margin: 0;
   font-size: var(--fs-md);
   line-height: 1.72;
 }
 
-.prose h3:not(:first-child) {
-  margin-top: var(--sp-6);
+.overview-topic h3 {
+  margin: 0;
 }
 
 .ticks {
@@ -1239,10 +1260,10 @@ main {
 
 /* ------------------------------------------------------- 13. Grad-CAM --- */
 .cam-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
-  gap: clamp(2.5rem, 6vw, 5rem);
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-10);
+  align-items: stretch;
 }
 
 .cam-steps {
@@ -1250,13 +1271,20 @@ main {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--sp-5);
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+  margin-top: var(--sp-10);
   counter-reset: cam;
 }
 
 .cam-step {
   position: relative;
-  padding-left: 3.25rem;
+  min-height: 100%;
+  padding: var(--sp-5) var(--sp-5) var(--sp-5) 4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--paper);
+  box-shadow: var(--sh-xs);
 }
 
 .cam-step::before {
@@ -1276,20 +1304,6 @@ main {
   font-weight: 700;
 }
 
-.cam-step::after {
-  content: "";
-  position: absolute;
-  left: 1.06rem;
-  top: 2.4rem;
-  bottom: -1.25rem;
-  width: 2px;
-  background: linear-gradient(var(--green-200), transparent);
-}
-
-.cam-step:last-child::after {
-  display: none;
-}
-
 .cam-step h3 {
   font-size: 1rem;
   margin-bottom: var(--sp-1);
@@ -1304,9 +1318,11 @@ main {
 
 .cam-figure {
   margin: 0;
+  width: 100%;
 }
 
 .cam-figure img {
+  display: block;
   width: 100%;
   border-radius: var(--r);
   border: 1px solid var(--line);
@@ -1353,15 +1369,17 @@ main {
 
 /* ------------------------------------------------ 14. Advisory work --- */
 .adv-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
-  gap: clamp(2.5rem, 6vw, 5rem);
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-10);
+  align-items: stretch;
 }
 
 .adv-points {
   display: grid;
+  grid-template-columns: 1fr;
   gap: var(--sp-4);
+  margin-top: var(--sp-10);
 }
 
 .adv-point {
@@ -1402,6 +1420,7 @@ main {
 .adv-figures {
   display: grid;
   gap: var(--sp-5);
+  width: 100%;
 }
 
 .adv-figures figure {
@@ -1409,6 +1428,7 @@ main {
 }
 
 .adv-figures img {
+  display: block;
   width: 100%;
   border-radius: var(--r);
   border: 1px solid var(--line);
@@ -2131,12 +2151,14 @@ code {
     grid-template-columns: 1fr;
   }
 
-  .hero-grid {
-    gap: var(--sp-10);
+  .prose,
+  .cam-steps,
+  .adv-points {
+    grid-template-columns: 1fr;
   }
 
-  .hero-figure {
-    max-width: 640px;
+  .hero-grid {
+    gap: var(--sp-10);
   }
 
   .demo-grid {
