@@ -157,32 +157,34 @@
   <!-- ========================= OVERVIEW ========================= -->
   <section class="section" id="overview" aria-labelledby="overview-title">
     <div class="shell">
-      <header class="section-head">
-        <p class="eyebrow">01 — Project</p>
-        <h2 id="overview-title">A scientific-grade computer vision pipeline</h2>
-        <p class="section-lede">
-          Manual seed inspection is slow, subjective, and inconsistent between graders. SeedVision AI is a
-          production-structured reference implementation that replaces ad-hoc scripting with a modular,
-          reproducible, and explainable pipeline — while being explicit about its scientific boundary.
-        </p>
-      </header>
-
       <div class="two-col">
-        <div class="prose">
-          <h3>The problem</h3>
-          <ul class="ticks">
-            <li>Manual visual grading is subjective and varies between inspectors.</li>
-            <li>Hand sorting cannot scale to high-throughput lot screening.</li>
-            <li>Mechanical damage and surface defects are easy to miss under inconsistent lighting.</li>
-            <li>Black-box "AI graders" provide no auditable evidence for their decisions.</li>
-          </ul>
-          <h3>The approach</h3>
-          <ul class="ticks">
-            <li>Two CNN architectures trained and compared under one identical protocol.</li>
-            <li>Deterministic preprocessing with train-time augmentation and eval-time normalization.</li>
-            <li><strong>Leakage-resistant, class-stratified group splits</strong> keyed on physical seed identity.</li>
-            <li>Grad-CAM explainability surfaced alongside every prediction, not hidden in a submenu.</li>
-          </ul>
+        <div class="overview-copy">
+          <header class="section-head">
+            <p class="eyebrow">01 — Project</p>
+            <h2 id="overview-title">A scientific-grade computer vision pipeline</h2>
+            <p class="section-lede">
+              Manual seed inspection is slow, subjective, and inconsistent between graders. SeedVision AI is a
+              production-structured reference implementation that replaces ad-hoc scripting with a modular,
+              reproducible, and explainable pipeline — while being explicit about its scientific boundary.
+            </p>
+          </header>
+
+          <div class="prose">
+            <h3>The problem</h3>
+            <ul class="ticks">
+              <li>Manual visual grading is subjective and varies between inspectors.</li>
+              <li>Hand sorting cannot scale to high-throughput lot screening.</li>
+              <li>Mechanical damage and surface defects are easy to miss under inconsistent lighting.</li>
+              <li>Black-box "AI graders" provide no auditable evidence for their decisions.</li>
+            </ul>
+            <h3>The approach</h3>
+            <ul class="ticks">
+              <li>Two CNN architectures trained and compared under one identical protocol.</li>
+              <li>Deterministic preprocessing with train-time augmentation and eval-time normalization.</li>
+              <li><strong>Leakage-resistant, class-stratified group splits</strong> keyed on physical seed identity.</li>
+              <li>Grad-CAM explainability surfaced alongside every prediction, not hidden in a submenu.</li>
+            </ul>
+          </div>
         </div>
 
         <div class="class-panel">
@@ -412,29 +414,31 @@
   <!-- ========================= GRAD-CAM ========================= -->
   <section class="section" id="gradcam" aria-labelledby="cam-title">
     <div class="shell">
-      <header class="section-head">
-        <p class="eyebrow">05 — Explainability</p>
-        <h2 id="cam-title">Grad-CAM saliency</h2>
-        <p class="section-lede">
-          Predictions arrive with their evidence. Grad-CAM pools the gradient of the predicted class score
-          over the final convolutional feature map, rectifies it with ReLU, normalises it, and blends the
-          result over the input as an alpha overlay.
-        </p>
-      </header>
-
       <div class="cam-grid">
-        <div class="cam-steps">
-          <div class="cam-step">
-            <h3>Original specimen</h3>
-            <p>Cropped RGB view of the seed under analysis.</p>
-          </div>
-          <div class="cam-step">
-            <h3>Activation heatmap</h3>
-            <p>Jet-colormapped saliency normalised to [0, 1] at the last conv layer.</p>
-          </div>
-          <div class="cam-step">
-            <h3>Blended overlay</h3>
-            <p>45% alpha blend highlighting the fracture or lesion region.</p>
+        <div class="cam-copy">
+          <header class="section-head">
+            <p class="eyebrow">05 — Explainability</p>
+            <h2 id="cam-title">Grad-CAM saliency</h2>
+            <p class="section-lede">
+              Predictions arrive with their evidence. Grad-CAM pools the gradient of the predicted class score
+              over the final convolutional feature map, rectifies it with ReLU, normalises it, and blends the
+              result over the input as an alpha overlay.
+            </p>
+          </header>
+
+          <div class="cam-steps">
+            <div class="cam-step">
+              <h3>Original specimen</h3>
+              <p>Cropped RGB view of the seed under analysis.</p>
+            </div>
+            <div class="cam-step">
+              <h3>Activation heatmap</h3>
+              <p>Jet-colormapped saliency normalised to [0, 1] at the last conv layer.</p>
+            </div>
+            <div class="cam-step">
+              <h3>Blended overlay</h3>
+              <p>45% alpha blend highlighting the fracture or lesion region.</p>
+            </div>
           </div>
         </div>
 
@@ -474,32 +478,34 @@
   <!-- ========================= ADVISORY ========================= -->
   <section class="section section-alt" id="advisory" aria-labelledby="adv-title">
     <div class="shell">
-      <header class="section-head">
-        <p class="eyebrow">06 — Real-data workflow</p>
-        <h2 id="adv-title">Advisory review assistant</h2>
-        <p class="section-lede">
-          When real photographs enter staging they are <code>pending_review</code> and contribute nothing to
-          training until a human decides. The review assistant can <em>recommend</em>, but it can never approve.
-        </p>
-      </header>
-
       <div class="adv-grid">
-        <div class="adv-points">
-          <div class="adv-point">
-            <h3>Default-deny by construction</h3>
-            <p>Auto-approval is hard-disabled (<code>AUTO_APPROVAL_ENABLED = False</code>). The recommendation chain fails closed.</p>
-          </div>
-          <div class="adv-point">
-            <h3>Quality screening</h3>
-            <p>Blur (Laplacian variance), perceptual near-duplicate hashing, and checkpoint-compatibility checks surface advisories.</p>
-          </div>
-          <div class="adv-point">
-            <h3>Human label preserved</h3>
-            <p>A reviewer's decision always wins; assistance never overwrites a human grade or writes to the manifest.</p>
-          </div>
-          <div class="adv-point">
-            <h3>Read-only staging</h3>
-            <p>The staging manifest stays <code>pending</code>; the assistant emits an advisory sidecar only.</p>
+        <div class="adv-copy">
+          <header class="section-head">
+            <p class="eyebrow">06 — Real-data workflow</p>
+            <h2 id="adv-title">Advisory review assistant</h2>
+            <p class="section-lede">
+              When real photographs enter staging they are <code>pending_review</code> and contribute nothing to
+              training until a human decides. The review assistant can <em>recommend</em>, but it can never approve.
+            </p>
+          </header>
+
+          <div class="adv-points">
+            <div class="adv-point">
+              <h3>Default-deny by construction</h3>
+              <p>Auto-approval is hard-disabled (<code>AUTO_APPROVAL_ENABLED = False</code>). The recommendation chain fails closed.</p>
+            </div>
+            <div class="adv-point">
+              <h3>Quality screening</h3>
+              <p>Blur (Laplacian variance), perceptual near-duplicate hashing, and checkpoint-compatibility checks surface advisories.</p>
+            </div>
+            <div class="adv-point">
+              <h3>Human label preserved</h3>
+              <p>A reviewer's decision always wins; assistance never overwrites a human grade or writes to the manifest.</p>
+            </div>
+            <div class="adv-point">
+              <h3>Read-only staging</h3>
+              <p>The staging manifest stays <code>pending</code>; the assistant emits an advisory sidecar only.</p>
+            </div>
           </div>
         </div>
 

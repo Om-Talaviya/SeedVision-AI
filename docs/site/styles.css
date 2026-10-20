@@ -648,8 +648,8 @@ main {
 
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: clamp(2rem, 5vw, 4rem);
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: clamp(2.5rem, 6vw, 5rem);
   align-items: center;
 }
 
@@ -659,6 +659,10 @@ main {
 
 .hero h1 .accent {
   color: var(--green-700);
+}
+
+.hero h1 {
+  font-size: clamp(3.1rem, 3.2vw + 1.25rem, 4.15rem);
 }
 
 .hero .lede {
@@ -834,9 +838,21 @@ main {
 /* ------------------------------------------ 9. Overview & class panel --- */
 .two-col {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  gap: clamp(2rem, 5vw, 3.5rem);
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: clamp(2.5rem, 6vw, 5rem);
   align-items: start;
+}
+
+.overview-copy,
+.cam-copy,
+.adv-copy {
+  min-width: 0;
+}
+
+.two-col .section-head,
+.cam-grid .section-head,
+.adv-grid .section-head {
+  margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 
 .prose {
@@ -1224,8 +1240,8 @@ main {
 /* ------------------------------------------------------- 13. Grad-CAM --- */
 .cam-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: clamp(2rem, 5vw, 3.5rem);
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(2.5rem, 6vw, 5rem);
   align-items: start;
 }
 
@@ -1338,8 +1354,8 @@ main {
 /* ------------------------------------------------ 14. Advisory work --- */
 .adv-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(2rem, 5vw, 3.5rem);
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(2.5rem, 6vw, 5rem);
   align-items: start;
 }
 
@@ -2097,7 +2113,17 @@ code {
 }
 
 /* ---------------------------------------------------- 21. Responsive --- */
-@media (max-width: 1080px) {
+@media (max-width: 960px) {
+  .hero-grid,
+  .two-col,
+  .cam-grid,
+  .adv-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 3rem);
+  }
+}
+
+@media (max-width: 720px) {
   .hero-grid,
   .two-col,
   .cam-grid,
