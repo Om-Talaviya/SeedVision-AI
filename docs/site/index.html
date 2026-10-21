@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1b5e20" />
 <meta name="color-scheme" content="light" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231b5e20'/%3E%3Cpath d='M16 24c0-6 0-9 0-12M16 12c-3-1-5-3-5-6 3 0 5 2 5 6Zm0 0c3-1 5-3 5-6-3 0-5 2-5 6Z' fill='none' stroke='%23a7f3d0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
-<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="styles.css?v=5" />
 <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
 </head>
 <body>
@@ -439,16 +439,22 @@
 
       <div class="cam-steps">
         <div class="cam-step">
-          <h3>Original specimen</h3>
-          <p>Cropped RGB view of the seed under analysis.</p>
+          <div class="cam-step-body">
+            <h3>Original specimen</h3>
+            <p>Cropped RGB view of the seed under analysis.</p>
+          </div>
         </div>
         <div class="cam-step">
-          <h3>Activation heatmap</h3>
-          <p>Jet-colormapped saliency normalised to [0, 1] at the last conv layer.</p>
+          <div class="cam-step-body">
+            <h3>Activation heatmap</h3>
+            <p>Jet-colormapped saliency normalised to [0, 1] at the last conv layer.</p>
+          </div>
         </div>
         <div class="cam-step">
-          <h3>Blended overlay</h3>
-          <p>45% alpha blend highlighting the fracture or lesion region.</p>
+          <div class="cam-step-body">
+            <h3>Blended overlay</h3>
+            <p>45% alpha blend highlighting the fracture or lesion region.</p>
+          </div>
         </div>
       </div>
 

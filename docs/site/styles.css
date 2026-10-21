@@ -108,7 +108,7 @@
   --sp-12: 3rem;
   --sp-16: 4rem;
   --sp-20: 5rem;
-  --section-y: clamp(4rem, 8vw, 7.5rem);
+  --section-y: clamp(2.5rem, 4.5vw, 4rem);
 
   /* Radii */
   --r-xs: 6px;
@@ -762,12 +762,20 @@ main {
 /* ------------------------------------------------- 8. Callouts/bands --- */
 .callout {
   display: flex;
+  align-items: flex-start;
   gap: var(--sp-4);
   padding: var(--sp-5) var(--sp-6);
   border-radius: var(--r);
   border: 1px solid var(--line);
   background: var(--paper);
   box-shadow: var(--sh-sm);
+  width: 100%;
+}
+
+.callout > div,
+.callout > p {
+  flex: 1;
+  min-width: 0;
 }
 
 .callout p {
@@ -806,7 +814,12 @@ main {
 
 .hero .callout {
   margin-top: var(--sp-10);
-  max-width: 62ch;
+  width: 100%;
+  max-width: none;
+}
+
+.formula-row + .callout {
+  margin-top: var(--sp-8);
 }
 
 /* Honesty band cards */
@@ -1278,9 +1291,10 @@ main {
 }
 
 .cam-step {
-  position: relative;
-  min-height: 100%;
-  padding: var(--sp-5) var(--sp-5) var(--sp-5) 4rem;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
   border: 1px solid var(--line);
   border-radius: var(--r);
   background: var(--paper);
@@ -1290,9 +1304,7 @@ main {
 .cam-step::before {
   counter-increment: cam;
   content: counter(cam);
-  position: absolute;
-  left: 0;
-  top: 0;
+  flex-shrink: 0;
   width: 2.25rem;
   height: 2.25rem;
   display: grid;
@@ -1302,11 +1314,18 @@ main {
   color: #fff;
   font-size: var(--fs-sm);
   font-weight: 700;
+  line-height: 1;
+}
+
+.cam-step-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .cam-step h3 {
   font-size: 1rem;
-  margin-bottom: var(--sp-1);
+  line-height: 1.25rem;
+  margin: 0 0 var(--sp-1);
 }
 
 .cam-step p {
@@ -2241,7 +2260,7 @@ code {
 
 @media (max-width: 800px) {
   :root {
-    --section-y: clamp(3rem, 9vw, 4.5rem);
+    --section-y: clamp(2rem, 5vw, 3rem);
   }
 
   .hero-figure {

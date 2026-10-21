@@ -155,6 +155,21 @@
       })
       .filter(function (item) { return item.section; });
 
+    var anchorLine = 0;
+    Array.prototype.some.call(document.styleSheets, function (sheet) {
+      var rules;
+      try { rules = sheet.cssRules; } catch (err) { return false; }
+      return Array.prototype.some.call(rules || [], function (rule) {
+        var margin = rule.style && rule.selectorText === ":target" && rule.style.scrollMarginTop;
+        if (!margin) return false;
+        anchorLine = parseFloat(margin) || 0;
+        if (margin.slice(-3) === "rem") {
+          anchorLine *= parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        }
+        return true;
+      });
+    });
+
     var latest = window.scrollY || document.documentElement.scrollTop || 0;
     var ticking = false;
 
@@ -169,7 +184,7 @@
       if (toTop) toTop.classList.toggle("is-visible", latest > window.innerHeight * 0.6);
 
       if (sections.length) {
-        var probe = Math.round(window.innerHeight * 0.3);
+        var probe = anchorLine ? anchorLine + 1 : window.innerHeight * 0.3;
         var current = sections[0];
         sections.forEach(function (item) {
           if (item.section.getBoundingClientRect().top <= probe) current = item;
